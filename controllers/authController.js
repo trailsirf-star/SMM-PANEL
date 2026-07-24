@@ -25,6 +25,7 @@ exports.postSignup = async (req, res) => {
         req.flash('success_msg', 'Account created successfully');
         res.redirect('/dashboard');
     } catch (err) {
+        console.error('[Signup Error]', err);
         req.flash('error_msg', 'Server Error');
         res.redirect('/signup');
     }
@@ -32,22 +33,41 @@ exports.postSignup = async (req, res) => {
 
 exports.postLogin = async (req, res) => {
     const { email, password, remember } = req.body;
+    console.log('[Login Attempt] Email:', email);
+    
     try {
         const user = await User.findOne({ email });
-        if (!user || !(await user.matchPassword(password))) {
+        console.log('[Login] User found?', !!user);
+        
+        if (!user) {
+            console.log('[Login] User not found for email:', email);
             req.flash('error_msg', 'Invalid credentials');
             return res.redirect('/login');
         }
+        
+        const passwordMatches = await user.matchPassword(password);
+        console.log('[Login] Password matches?', passwordMatches);
+        
+        if (!passwordMatches) {
+            console.log('[Login] Password mismatch for user:', email);
+            req.flash('error_msg', 'Invalid credentials');
+            return res.redirect('/login');
+        }
+        
         if (user.status === 'banned') {
+            console.log('[Login] User banned:', email);
             req.flash('error_msg', 'Your account is banned');
             return res.redirect('/login');
         }
+        
         const token = generateToken(user._id, remember);
         res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+        console.log('[Login] Success for user:', email, 'Role:', user.role);
         
         if (user.role === 'admin') return res.redirect('/admin/dashboard');
         res.redirect('/dashboard');
     } catch (err) {
+        console.error('[Login Error]', err);
         req.flash('error_msg', 'Server Error');
         res.redirect('/login');
     }
@@ -58,3 +78,4 @@ exports.logout = (req, res) => {
     req.flash('success_msg', 'You are logged out');
     res.redirect('/login');
 };
+
