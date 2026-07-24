@@ -1,0 +1,44 @@
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">My Orders</h5>
+        <span class="badge bg-success">Auto-refreshing</span>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover" id="ordersTable">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Service</th><th>Link</th><th>Qty</th><th>Charge</th><th>Status</th><th>Remains</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% orders.forEach(o => { %>
+                    <tr id="row-<%= o._id %>">
+                        <td><%= o._id.toString().substring(0,6) %></td>
+                        <td><%= o.service ? o.service.name : 'Deleted' %></td>
+                        <td><a href="<%= o.link %>" target="_blank" class="text-truncate d-inline-block" style="max-width: 150px;"><%= o.link %></a></td>
+                        <td><%= o.quantity %></td>
+                        <td><%= o.charge.toFixed(2) %></td>
+                        <td><span class="badge bg-info"><%= o.status %></span></td>
+                        <td class="remains"><%= o.remains %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    setInterval(async () => {
+        try {
+            const res = await fetch('/orders/status');
+            const data = await res.json();
+            data.forEach(o => {
+                const row = document.getElementById('row-' + o._id);
+                if(row) {
+                    row.querySelector('.badge').innerText = o.status;
+                    row.querySelector('.badge').className = 'badge ' + (o.status === 'completed' ? 'bg-success' : 'bg-info');
+                    row.querySelector('.remains').innerText = o.remains;
+                }
+            });
+        } catch(e) { console.log('Refresh failed'); }
+    }, 5000);
+</script>

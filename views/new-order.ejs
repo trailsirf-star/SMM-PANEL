@@ -1,0 +1,43 @@
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h4 class="mb-4">Place New Order</h4>
+        <form action="/orders/new" method="POST">
+            <div class="mb-3">
+                <label class="form-label">Select Service</label>
+                <select name="serviceId" id="serviceSelect" class="form-select" required>
+                    <option value="">-- Select Service --</option>
+                    <% services.forEach(s => { %>
+                        <option value="<%= s._id %>" data-price="<%= s.sellPricePer1000 %>" data-min="<%= s.minOrder %>" data-max="<%= s.maxOrder %>">
+                            <%= s.category %> - <%= s.name %> (Rate: <%= s.sellPricePer1000 %> / 1000)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Link</label>
+                <input type="url" name="link" class="form-control" placeholder="https://instagram.com/..." required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity" id="quantityInput" class="form-control" oninput="calculateCharge()" required>
+                <small id="qtyHint" class="text-muted"></small>
+            </div>
+            <div class="mb-3">
+                <h5>Estimated Charge: <span id="totalCharge" class="text-success">0.00</span> PKR</h5>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Order</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function calculateCharge() {
+        const select = document.getElementById('serviceSelect');
+        const option = select.options[select.selectedIndex];
+        const price = parseFloat(option.getAttribute('data-price')) || 0;
+        const qty = parseInt(document.getElementById('quantityInput').value) || 0;
+        const charge = (price / 1000) * qty;
+        document.getElementById('totalCharge').innerText = charge.toFixed(2);
+        document.getElementById('qtyHint').innerText = `Min: ${option.getAttribute('data-min')} / Max: ${option.getAttribute('data-max')}`;
+    }
+</script>

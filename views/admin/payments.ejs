@@ -1,0 +1,40 @@
+<h4 class="mb-4">Pending Easypaisa Payments</h4>
+<div class="table-responsive mb-5">
+    <table class="table table-hover bg-white shadow-sm">
+        <thead class="table-dark">
+            <tr><th>User</th><th>Amount</th><th>TRX ID</th><th>Proof</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            <% pendingTxns.forEach(t => { %>
+                <tr>
+                    <td><%= t.user.name %></td>
+                    <td><%= t.amount %> PKR</td>
+                    <td><%= t.transactionId %></td>
+                    <td><a href="<%= t.screenshotPath %>" target="_blank" class="btn btn-sm btn-outline-info">View</a></td>
+                    <td>
+                        <form action="/admin/payments/<%= t._id %>/approve" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal<%= t._id %>">Reject</button>
+                        
+                        <div class="modal fade" id="rejectModal<%= t._id %>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form action="/admin/payments/<%= t._id %>/reject" method="POST">
+                                        <div class="modal-header"><h5 class="modal-title">Reject Payment</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                                        <div class="modal-body">
+                                            <label>Reason for rejection</label>
+                                            <input type="text" name="reason" class="form-control" required>
+                                        </div>
+                                        <div class="modal-footer"><button type="submit" class="btn btn-danger">Confirm Reject</button></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            <% }) %>
+            <% if(pendingTxns.length === 0) { %> <tr><td colspan="5" class="text-center">No pending payments</td></tr> <% } %>
+        </tbody>
+    </table>
+</div>

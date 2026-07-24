@@ -1,0 +1,29 @@
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-primary p-3 shadow-sm rounded-3">
+            <h6>Total Revenue</h6>
+            <h3 class="mb-0"><%= revenue.toFixed(2) %> PKR</h3>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success p-3 shadow-sm rounded-3">
+            <h6>Total Orders</h6>
+            <h3 class="mb-0"><%= totalOrders %></h3>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info p-3 shadow-sm rounded-3">
+            <h6>Total Users</h6>
+            <h3 class="mb-0"><%= totalUsers %></h3>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning p-3 shadow-sm rounded-3">
+            <h6>Pending Payments</h6>
+            <h3 class="mb-0"><%= pendingTxns %></h3>
+            <a href="/admin/payments" class="text-white">Review Now</a>
+        </div>
+    </div>
+</div>
+<h5>Recent Activity</h5>
+<p>Use the sidebar to navigate through management modules.</p>

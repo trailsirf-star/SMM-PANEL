@@ -1,0 +1,16 @@
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card bg-primary text-white p-4 shadow-sm rounded-3">
+            <h5>Wallet Balance</h5>
+            <h2><%= user.balance.toFixed(2) %> PKR</h2>
+            <a href="/funds/add" class="btn btn-light btn-sm mt-2">Add Funds</a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card bg-success text-white p-4 shadow-sm rounded-3">
+            <h5>Quick Order</h5>
+            <p class="mb-2">Place a new order instantly</p>
+            <a href="/orders/new" class="btn btn-light btn-sm">New Order</a>
+        </div>
+    </div>
+</div>

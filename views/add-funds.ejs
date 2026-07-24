@@ -1,0 +1,43 @@
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h4 class="mb-3">Add Funds (Easypaisa)</h4>
+        <div class="alert alert-info">
+            Send payment to: <strong><%= settings.easypaisaNumber %></strong> (<%= settings.easypaisaAccountName %>)<br>
+            Minimum deposit: <%= settings.minimumDeposit %> <%= settings.currency %>
+        </div>
+        <form action="/funds/add" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label>Amount (PKR)</label>
+                <input type="number" name="amount" class="form-control" min="<%= settings.minimumDeposit %>" required>
+            </div>
+            <div class="mb-3">
+                <label>Easypaisa Transaction ID (TRX ID)</label>
+                <input type="text" name="transactionId" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Upload Screenshot</label>
+                <input type="file" name="screenshot" class="form-control" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Request</button>
+        </form>
+
+        <hr>
+        <h5 class="mt-4">Recent Transactions</h5>
+        <table class="table table-sm">
+            <thead><tr><th>Amount</th><th>TRX ID</th><th>Status</th></tr></thead>
+            <tbody>
+                <% transactions.forEach(t => { %>
+                    <tr>
+                        <td><%= t.amount %></td>
+                        <td><%= t.transactionId %></td>
+                        <td>
+                            <% if(t.status === 'pending') { %> <span class="badge bg-warning">Pending</span> <% } %>
+                            <% if(t.status === 'approved') { %> <span class="badge bg-success">Approved</span> <% } %>
+                            <% if(t.status === 'rejected') { %> <span class="badge bg-danger">Rejected</span> <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
