@@ -13,7 +13,7 @@ connectDB();
 
 const app = express();
 
-// Security
+// Security Middleware
 app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
@@ -24,10 +24,10 @@ app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Static
+// Static Folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// EJS
+// EJS Setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
@@ -35,20 +35,20 @@ app.set('layout', 'layout');
 
 // Express Session & Flash
 app.use(session({
-    secret: process.env.JWT_SECRET,
+    secret: process.env.JWT_SECRET || 'fallback_secret',
     resave: true,
     saveUninitialized: true
 }));
 app.use(flash());
 
-// Global Vars
+// Global Variables for Flash Messages
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     next();
 });
 
-// Routes
+// Routes Mapping
 app.use('/', require('./routes/authRoutes'));
 app.use('/dashboard', require('./routes/userRoutes'));
 app.use('/orders', require('./routes/orderRoutes'));
@@ -56,9 +56,9 @@ app.use('/funds', require('./routes/fundsRoutes'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/api/v2', require('./routes/apiRoutes'));
 
-// Error Handler
+// 404 Error Handler
 app.use((req, res) => {
-    res.status(404).render('404', { layout: 'layout' });
+    res.status(404).send('Page not found');
 });
 
 const PORT = process.env.PORT || 3000;
