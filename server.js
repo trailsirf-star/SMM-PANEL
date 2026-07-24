@@ -3,6 +3,7 @@ const express = require('express');
 const connectDB = require('./config/db');
 const helmet = require('helmet');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const expressLayouts = require('express-ejs-layouts');
 const flash = require('connect-flash');
 const session = require('express-session');
@@ -23,6 +24,9 @@ app.use(cors());
 // Body Parser
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+// Cookie Parser
+app.use(cookieParser());
 
 // Static Folder
 app.use(express.static(path.join(__dirname, 'public')));
@@ -68,3 +72,4 @@ app.listen(PORT, () => {
     // Start Cron Jobs
     require('./cron')();
 });
+
