@@ -451,6 +451,41 @@ exports.deleteService = async (req, res) => {
   }
 };
 
+/**
+ * Bulk-sets status ('active' | 'disabled') on many services at once.
+ * Pass { all: true } to apply to every service (e.g. "Enable All"), or
+ * { serviceIds: [...] } to apply to a specific checked selection. Imported
+ * services default to 'disabled' (see importServicesFromProvider) so admins
+ * can review pricing first — this is how they go live without clicking
+ * Save on every row individually.
+ */
+exports.bulkUpdateServiceStatus = async (req, res) => {
+  try {
+    const { serviceIds, status, all } = req.body;
+
+    if (!['active', 'disabled'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status.' });
+    }
+
+    let filter;
+    if (all === true) {
+      filter = {};
+    } else {
+      if (!Array.isArray(serviceIds) || serviceIds.length === 0) {
+        return res.status(400).json({ success: false, error: 'No services selected.' });
+      }
+      filter = { _id: { $in: serviceIds } };
+    }
+
+    const result = await Service.updateMany(filter, { $set: { status } });
+
+    res.json({ success: true, updated: result.modifiedCount });
+  } catch (err) {
+    console.error('[Admin] Bulk update service status error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to update services.' });
+  }
+};
+
 // ---------- API PROVIDERS ----------
 
 exports.getApiProviders = async (req, res) => {
