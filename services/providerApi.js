@@ -14,17 +14,38 @@ const axios = require('axios');
 const DEFAULT_TIMEOUT = 15000;
 
 async function callProvider(apiUrl, payload) {
+
+  console.log("========== PROVIDER ==========");
+  console.log("URL:", apiUrl);
+  console.log("Payload:", payload);
+
   try {
-    const { data } = await axios.post(apiUrl, new URLSearchParams(payload), {
-      timeout: DEFAULT_TIMEOUT,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
+    const { data } = await axios.post(
+      apiUrl,
+      new URLSearchParams(payload),
+      {
+        timeout: DEFAULT_TIMEOUT,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }
+    );
+
+    console.log("Response:", data);
+
     return data;
+
   } catch (err) {
-    const msg = err.response?.data
-      ? JSON.stringify(err.response.data)
-      : err.message;
-    throw new Error(`Provider API request failed: ${msg}`);
+    console.log("Axios Error:", err.message);
+    console.log("Response:", err.response?.data);
+
+    throw new Error(
+      `Provider API request failed: ${
+        err.response?.data
+          ? JSON.stringify(err.response.data)
+          : err.message
+      }`
+    );
   }
 }
 
