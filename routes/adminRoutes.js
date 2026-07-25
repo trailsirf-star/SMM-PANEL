@@ -33,6 +33,7 @@ router.post('/services/:id/update', adminController.updateService);
 router.post('/services/:id/delete', adminController.deleteService);
 router.post('/services/import/:providerId', adminController.importServicesFromProvider);
 router.post('/services/apply-commission', adminController.applyCommissionToServices);
+router.post('/services/bulk-status', adminController.bulkUpdateServiceStatus);
 
 // API Providers
 router.get('/api-providers', adminController.getApiProviders);
