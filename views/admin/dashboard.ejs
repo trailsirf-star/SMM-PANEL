@@ -1,0 +1,135 @@
+<h3 class="fw-bold mb-4">Admin Dashboard</h3>
+
+<% if (stats.pendingPayments > 0) { %>
+  <div class="alert alert-warning d-flex justify-content-between align-items-center">
+    <span><i class="fa-solid fa-triangle-exclamation"></i> You have <strong><%= stats.pendingPayments %></strong> pending fund request(s) awaiting review.</span>
+    <a href="/admin/payments" class="btn btn-sm btn-dark">Review Now</a>
+  </div>
+<% } %>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Orders Today</div>
+        <div class="fs-4 fw-bold"><%= stats.ordersToday %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Orders This Month</div>
+        <div class="fs-4 fw-bold"><%= stats.ordersThisMonth %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Orders All-Time</div>
+        <div class="fs-4 fw-bold"><%= stats.ordersAllTime %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">New Users Today</div>
+        <div class="fs-4 fw-bold"><%= stats.newUsersToday %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Revenue</div>
+        <div class="fs-4 fw-bold text-success">Rs. <%= stats.totalRevenue.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Profit</div>
+        <div class="fs-4 fw-bold text-success">Rs. <%= stats.totalProfit.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Provider Cost (Spend)</div>
+        <div class="fs-4 fw-bold text-danger">Rs. <%= stats.totalProviderCost.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Active Users</div>
+        <div class="fs-4 fw-bold"><%= stats.activeUsers %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white fw-semibold">Orders — Last 7 Days</div>
+      <div class="card-body">
+        <canvas id="ordersChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white fw-semibold">API Providers</div>
+      <div class="list-group list-group-flush">
+        <% if (providers.length === 0) { %>
+          <div class="list-group-item text-muted">No providers configured yet. <a href="/admin/api-providers">Add one</a>.</div>
+        <% } %>
+        <% providers.forEach(p => { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold"><%= p.name %></div>
+              <div class="small text-muted">
+                Balance: <%= p.balance.toFixed(2) %> <%= p.currency %>
+                <% if (p.lastSyncedAt) { %> · synced <%= new Date(p.lastSyncedAt).toLocaleTimeString() %><% } %>
+              </div>
+            </div>
+            <span class="badge <%= p.isActive ? 'bg-success' : 'bg-secondary' %>"><%= p.isActive ? 'Active' : 'Inactive' %></span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  const ctx = document.getElementById('ordersChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: <%- chartLabels %>,
+      datasets: [{
+        label: 'Orders',
+        data: <%- chartData %>,
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+</script>
