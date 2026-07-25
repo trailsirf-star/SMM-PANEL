@@ -1,0 +1,124 @@
+<h3 class="fw-bold mb-4">Fund Requests</h3>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pendingTab" type="button">
+      Pending <span class="badge bg-warning text-dark"><%= pending.length %></span>
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#historyTab" type="button">History</button>
+  </li>
+</ul>
+
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="pendingTab">
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>User</th>
+              <th>Amount</th>
+              <th>TRX ID</th>
+              <th>Screenshot</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (pending.length === 0) { %>
+              <tr><td colspan="6" class="text-center text-muted py-4">No pending fund requests.</td></tr>
+            <% } %>
+            <% pending.forEach(tx => { %>
+              <tr data-tx-id="<%= tx._id %>">
+                <td><%= tx.user ? tx.user.name : 'Deleted User' %><div class="small text-muted"><%= tx.user ? tx.user.email : '' %></div></td>
+                <td>Rs. <%= tx.amount.toFixed(2) %></td>
+                <td><%= tx.transactionId %></td>
+                <td>
+                  <a href="<%= tx.screenshotPath %>" target="_blank">
+                    <img src="<%= tx.screenshotPath %>" class="rounded border" style="height:60px;cursor:zoom-in;">
+                  </a>
+                </td>
+                <td><%= tx.createdAt.toLocaleString() %></td>
+                <td class="text-nowrap">
+                  <button class="btn btn-sm btn-success js-approve-btn" data-id="<%= tx._id %>">Approve</button>
+                  <button class="btn btn-sm btn-danger js-reject-btn" data-id="<%= tx._id %>">Reject</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="historyTab">
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>User</th>
+              <th>Amount</th>
+              <th>TRX ID</th>
+              <th>Status</th>
+              <th>Note</th>
+              <th>Reviewed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (history.length === 0) { %>
+              <tr><td colspan="6" class="text-center text-muted py-4">No reviewed requests yet.</td></tr>
+            <% } %>
+            <% history.forEach(tx => { %>
+              <tr>
+                <td><%= tx.user ? tx.user.name : 'Deleted User' %></td>
+                <td>Rs. <%= tx.amount.toFixed(2) %></td>
+                <td><%= tx.transactionId %></td>
+                <td><span class="badge <%= tx.status === 'approved' ? 'bg-success' : 'bg-danger' %>"><%= tx.status %></span></td>
+                <td><%= tx.adminNote || '-' %></td>
+                <td><%= tx.reviewedAt ? tx.reviewedAt.toLocaleString() : '-' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.js-approve-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Approve this payment and credit the user\'s balance?')) return;
+      const id = btn.dataset.id;
+      const res = await fetch(`/admin/payments/${id}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        document.querySelector(`tr[data-tx-id="${id}"]`).remove();
+      } else {
+        alert(data.error || 'Failed to approve.');
+      }
+    });
+  });
+
+  document.querySelectorAll('.js-reject-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const reason = prompt('Reason for rejection:');
+      if (reason === null) return;
+      const id = btn.dataset.id;
+      const res = await fetch(`/admin/payments/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.querySelector(`tr[data-tx-id="${id}"]`).remove();
+      } else {
+        alert(data.error || 'Failed to reject.');
+      }
+    });
+  });
+</script>
