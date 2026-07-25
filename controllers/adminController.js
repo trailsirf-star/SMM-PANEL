@@ -512,22 +512,53 @@ exports.createApiProvider = async (req, res) => {
 exports.testApiProviderConnection = async (req, res) => {
   try {
     const provider = await ApiProvider.findById(req.params.id);
-    if (!provider) return res.status(404).json({ success: false, error: 'Provider not found.' });
 
-    const { balance, currency } = await providerApi.getBalance({
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        error: 'Provider not found.'
+      });
+    }
+
+    console.log("======================================");
+    console.log("TESTING PROVIDER CONNECTION");
+    console.log("Provider Name:", provider.name);
+    console.log("API URL:", provider.apiUrl);
+    console.log("API KEY:", provider.apiKey);
+    console.log("======================================");
+
+    const result = await providerApi.getBalance({
       apiUrl: provider.apiUrl,
       apiKey: provider.apiKey,
     });
 
-    provider.balance = balance;
-    provider.currency = currency;
+    console.log("Provider returned:");
+    console.log(result);
+
+    provider.balance = result.balance;
+    provider.currency = result.currency;
     provider.lastSyncedAt = new Date();
+
     await provider.save();
 
-    res.json({ success: true, balance, currency });
+    return res.json({
+      success: true,
+      balance: result.balance,
+      currency: result.currency
+    });
+
   } catch (err) {
-    console.error('[Admin] Test provider connection error:', err.message);
-    res.status(502).json({ success: false, error: err.message });
+
+    console.error("======================================");
+    console.error("PROVIDER CONNECTION FAILED");
+    console.error(err);
+    console.error("======================================");
+
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
+
   }
 };
 
