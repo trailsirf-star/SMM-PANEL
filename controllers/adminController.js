@@ -6,8 +6,82 @@ const ApiProvider = require('../models/ApiProvider');
 const Settings = require('../models/Settings');
 const providerApi = require('../services/providerApi');
 
-// Currency Conversion: Provider API returns USD. Multiply by 280 to convert to PKR.
-const EXCHANGE_RATE = 280; 
+exports.importServicesFromProvider = async (req, res) => {
+  try {
+    const provider = await ApiProvider.findById(req.params.providerId);
+    if (!provider) return res.status(404).json({ success: false, error: 'Provider not found.' });
+
+    const settings = await Settings.getSettings();
+    const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
+
+    const providerServices = await providerApi.getServices({
+      apiUrl: provider.apiUrl,
+      apiKey: provider.apiKey,
+    });
+
+    let imported = 0;
+
+    for (const ps of providerServices) {
+      const exists = await Service.findOne({
+        providerServiceId: String(ps.service),
+        provider: provider._id,
+      });
+
+      if (exists) continue;
+
+      const rawRate = Number(ps.rate);
+      const cost = Number.isFinite(rawRate) ? rawRate : 0;
+
+      await Service.create({
+        name: ps.name,
+        category: ps.category || 'Other',
+        providerServiceId: String(ps.service),
+        providerCostPer1000: cost,
+        sellPricePer1000: Math.ceil(cost * markupMultiplier * 100) / 100,
+        minOrder: parseInt(ps.min, 10) || 100,
+        maxOrder: parseInt(ps.max, 10) || 10000,
+        description: ps.type || '',
+        provider: provider._id,
+        status: 'disabled',
+      });
+
+      imported += 1;
+    }
+
+    res.json({ success: true, imported, commissionPercent: settings.commissionPercent });
+  } catch (err) {
+    console.error('[Admin] Import services error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.applyCommissionToServices = async (req, res) => {
+  try {
+    const { serviceIds } = req.body || {};
+    const settings = await Settings.getSettings();
+    const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
+
+    const filter =
+      Array.isArray(serviceIds) && serviceIds.length > 0
+        ? { _id: { $in: serviceIds } }
+        : {};
+
+    const services = await Service.find(filter);
+
+    let updated = 0;
+
+    for (const service of services) {
+      service.sellPricePer1000 = Math.ceil(service.providerCostPer1000 * markupMultiplier * 100) / 100;
+      await service.save();
+      updated += 1;
+    }
+
+    res.json({ success: true, updated, commissionPercent: settings.commissionPercent });
+  } catch (err) {
+    console.error('[Admin] Apply commission error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to apply commission.' });
+  }
+};
 
 // ---------- DASHBOARD ----------
 
