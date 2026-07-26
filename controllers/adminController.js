@@ -6,88 +6,6 @@ const ApiProvider = require('../models/ApiProvider');
 const Settings = require('../models/Settings');
 const providerApi = require('../services/providerApi');
 
-exports.importServicesFromProvider = async (req, res) => {
-  try {
-    const provider = await ApiProvider.findById(req.params.providerId);
-    if (!provider) {
-      return res.status(404).json({ success: false, error: 'Provider not found.' });
-    }
-
-    const settings = await Settings.getSettings();
-    const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
-
-    const providerServices = await providerApi.getServices({
-      apiUrl: provider.apiUrl,
-      apiKey: provider.apiKey,
-    });
-
-    let imported = 0;
-    let updated = 0;
-    let skipped = 0;
-
-    for (const ps of providerServices) {
-      if (!ps || ps.service == null || !ps.name) {
-        skipped += 1;
-        continue;
-      }
-
-      const rawRate = Number(ps.rate);
-      const cost = Number.isFinite(rawRate) ? rawRate * EXCHANGE_RATE : 0;
-
-      const filter = {
-        providerServiceId: String(ps.service),
-        provider: provider._id,
-      };
-
-      const existing = await Service.findOne(filter);
-
-      const payload = {
-        name: String(ps.name).trim(),
-        category: String(ps.category || 'Other').trim(),
-        providerServiceId: String(ps.service),
-        providerCostPer1000: cost,
-        sellPricePer1000: Math.ceil(cost * markupMultiplier * 100) / 100,
-        minOrder: parseInt(ps.min, 10) || 100,
-        maxOrder: parseInt(ps.max, 10) || 10000,
-        description: String(ps.type || '').trim(),
-        provider: provider._id,
-        status: 'disabled',
-      };
-
-      if (existing) {
-        existing.name = payload.name;
-        existing.category = payload.category;
-        existing.providerCostPer1000 = payload.providerCostPer1000;
-        existing.sellPricePer1000 = payload.sellPricePer1000;
-        existing.minOrder = payload.minOrder;
-        existing.maxOrder = payload.maxOrder;
-        existing.description = payload.description;
-        existing.status = 'disabled';
-
-        await existing.save();
-        updated += 1;
-      } else {
-        await Service.create(payload);
-        imported += 1;
-      }
-    }
-
-    return res.json({
-      success: true,
-      imported,
-      updated,
-      skipped,
-      commissionPercent: settings.commissionPercent,
-    });
-  } catch (err) {
-    console.error('[Admin] Import services error:', err.message);
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-    });
-  }
-};
-
 // ---------- DASHBOARD ----------
 
 exports.getDashboard = async (req, res) => {
@@ -99,6 +17,7 @@ exports.getDashboard = async (req, res) => {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
+    // FIX: Only calculate revenue and profit for completed or partial orders
     const completedStatuses = ['completed', 'partial'];
 
     const [ordersToday, ordersThisMonth, ordersAllTime, revenueAgg, profitAgg, pendingPayments, newUsersToday, activeUsers, providers] =
@@ -427,29 +346,50 @@ exports.importServicesFromProvider = async (req, res) => {
     const providerServices = await providerApi.getServices({ apiUrl: provider.apiUrl, apiKey: provider.apiKey });
 
     let imported = 0;
+    let updated = 0;
+
     for (const ps of providerServices) {
-      const exists = await Service.findOne({ providerServiceId: String(ps.service), provider: provider._id });
-      if (exists) continue;
+      if (!ps || ps.service == null || !ps.name) continue;
 
-      const rawRate = parseFloat(ps.rate) || 0;
-      const costInPkr = rawRate * EXCHANGE_RATE;
+      // FIX: Save EXACT rate from API. No hardcoded exchange rate.
+      const cost = parseFloat(ps.rate) || 0;
+      const sellPrice = Math.ceil(cost * markupMultiplier * 100) / 100;
 
-      await Service.create({
-        name: ps.name,
-        category: ps.category || 'Other',
+      const filter = {
         providerServiceId: String(ps.service),
-        providerCostPer1000: costInPkr,
-        sellPricePer1000: Math.ceil(costInPkr * markupMultiplier * 100) / 100,
+        provider: provider._id,
+      };
+
+      const existing = await Service.findOne(filter);
+
+      const updateData = {
+        name: String(ps.name).trim(),
+        category: String(ps.category || 'Other').trim(),
+        providerCostPer1000: cost,
+        sellPricePer1000: sellPrice,
         minOrder: parseInt(ps.min, 10) || 100,
         maxOrder: parseInt(ps.max, 10) || 10000,
-        description: ps.type || '',
-        provider: provider._id,
-        status: 'disabled',
-      });
-      imported += 1;
+        description: String(ps.type || '').trim(),
+      };
+
+      if (existing) {
+        // Update existing service but preserve its current status
+        Object.assign(existing, updateData);
+        await existing.save();
+        updated += 1;
+      } else {
+        // Create new service as disabled
+        await Service.create({
+          ...updateData,
+          providerServiceId: String(ps.service),
+          provider: provider._id,
+          status: 'disabled',
+        });
+        imported += 1;
+      }
     }
 
-    res.json({ success: true, imported, commissionPercent: settings.commissionPercent });
+    res.json({ success: true, imported, updated, commissionPercent: settings.commissionPercent });
   } catch (err) {
     console.error('[Admin] Import services error:', err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -458,36 +398,79 @@ exports.importServicesFromProvider = async (req, res) => {
 
 exports.applyCommissionToServices = async (req, res) => {
   try {
-    const { serviceIds } = req.body || {};
+    const { serviceIds } = req.body || {}; 
     const settings = await Settings.getSettings();
     const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
 
-    const filter =
-      Array.isArray(serviceIds) && serviceIds.length > 0
-        ? { _id: { $in: serviceIds } }
-        : {};
-
+    const filter = Array.isArray(serviceIds) && serviceIds.length > 0 ? { _id: { $in: serviceIds } } : {};
     const services = await Service.find(filter);
 
     let updated = 0;
-
     for (const service of services) {
+      // Apply commission to the exact provider cost stored in DB
       service.sellPricePer1000 = Math.ceil(service.providerCostPer1000 * markupMultiplier * 100) / 100;
       await service.save();
       updated += 1;
     }
 
-    return res.json({
-      success: true,
-      updated,
-      commissionPercent: settings.commissionPercent,
-    });
+    res.json({ success: true, updated, commissionPercent: settings.commissionPercent });
   } catch (err) {
     console.error('[Admin] Apply commission error:', err.message);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to apply commission.',
-    });
+    res.status(500).json({ success: false, error: 'Failed to apply commission.' });
+  }
+};
+
+// RESTORED MISSING FUNCTIONS
+exports.updateService = async (req, res) => {
+  try {
+    const { sellPricePer1000, minOrder, maxOrder, status } = req.body || {};
+    const update = {};
+    if (sellPricePer1000 !== undefined) update.sellPricePer1000 = parseFloat(sellPricePer1000);
+    if (minOrder !== undefined) update.minOrder = parseInt(minOrder, 10);
+    if (maxOrder !== undefined) update.maxOrder = parseInt(maxOrder, 10);
+    if (status !== undefined) update.status = status;
+
+    await Service.findByIdAndUpdate(req.params.id, update);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Admin] Update service error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to update service.' });
+  }
+};
+
+exports.deleteService = async (req, res) => {
+  try {
+    await Service.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Admin] Delete service error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to delete service.' });
+  }
+};
+
+exports.bulkUpdateServiceStatus = async (req, res) => {
+  try {
+    const { serviceIds, status, all } = req.body || {};
+
+    if (!['active', 'disabled'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status.' });
+    }
+
+    let filter;
+    if (all === true) {
+      filter = {};
+    } else {
+      if (!Array.isArray(serviceIds) || serviceIds.length === 0) {
+        return res.status(400).json({ success: false, error: 'No services selected.' });
+      }
+      filter = { _id: { $in: serviceIds } };
+    }
+
+    const result = await Service.updateMany(filter, { $set: { status } });
+    res.json({ success: true, updated: result.modifiedCount });
+  } catch (err) {
+    console.error('[Admin] Bulk update service status error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to update services.' });
   }
 };
 
