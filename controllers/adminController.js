@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const Order = require('../models/Order');
-const Service = require('../models/Service');
+const Service = require('../Service');
 const Transaction = require('../models/Transaction');
 const ApiProvider = require('../models/ApiProvider');
 const Settings = require('../models/Settings');
@@ -17,14 +17,20 @@ exports.getDashboard = async (req, res) => {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
+    // FIX: Only calculate revenue and profit for completed or partial orders
+    const completedStatuses = ['completed', 'partial'];
+
     const [ordersToday, ordersThisMonth, ordersAllTime, revenueAgg, profitAgg, pendingPayments, newUsersToday, activeUsers, providers] =
       await Promise.all([
         Order.countDocuments({ createdAt: { $gte: startOfToday } }),
         Order.countDocuments({ createdAt: { $gte: startOfMonth } }),
         Order.countDocuments({}),
-        Order.aggregate([{ $group: { _id: null, total: { $sum: '$charge' } } }]),
         Order.aggregate([
-          { $match: { status: 'completed' } },
+          { $match: { status: { $in: completedStatuses } } },
+          { $group: { _id: null, total: { $sum: '$charge' } } }
+        ]),
+        Order.aggregate([
+          { $match: { status: { $in: completedStatuses } } },
           { $group: { _id: null, total: { $sum: { $subtract: ['$charge', '$providerCost'] } } } },
         ]),
         Transaction.countDocuments({ status: 'pending' }),
@@ -37,6 +43,7 @@ exports.getDashboard = async (req, res) => {
     const totalProfit = profitAgg[0]?.total || 0;
 
     const costAgg = await Order.aggregate([
+      { $match: { status: { $in: completedStatuses } } },
       { $group: { _id: null, total: { $sum: '$providerCost' } } },
     ]);
     const totalProviderCost = costAgg[0]?.total || 0;
@@ -407,11 +414,41 @@ exports.applyCommissionToServices = async (req, res) => {
     const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
 
     const filter = Array.isArray(serviceIds) && serviceIds.length > 0 ? { _id: { $in: serviceIds } } : {};
-    const services = await Service.find(filter);
+    const services = await Service.find(filter).populate('provider');
+
+    // FIX: Fetch fresh rates from the provider API to ensure the base cost is accurate
+    const providerMap = new Map();
+    services.forEach(s => {
+      if (s.provider) {
+        if (!providerMap.has(s.provider._id.toString())) {
+          providerMap.set(s.provider._id.toString(), s.provider);
+        }
+      }
+    });
+
+    const rateMap = new Map(); // key: providerServiceId, value: rate
+    for (const [id, provider] of providerMap) {
+      try {
+        const providerServices = await providerApi.getServices({ apiUrl: provider.apiUrl, apiKey: provider.apiKey });
+        providerServices.forEach(ps => {
+          rateMap.set(String(ps.service), parseFloat(ps.rate) || 0);
+        });
+      } catch (err) {
+        console.error(`[Admin] Failed to sync rates for provider ${provider.name}:`, err.message);
+      }
+    }
 
     let updated = 0;
     for (const service of services) {
-      service.sellPricePer1000 = Math.ceil(service.providerCostPer1000 * markupMultiplier * 100) / 100;
+      let cost = service.providerCostPer1000;
+      
+      // If we fetched fresh data for this provider, update the cost in DB
+      if (service.provider && rateMap.has(service.providerServiceId)) {
+        cost = rateMap.get(service.providerServiceId);
+        service.providerCostPer1000 = cost;
+      }
+
+      service.sellPricePer1000 = Math.ceil(cost * markupMultiplier * 100) / 100;
       await service.save();
       updated += 1;
     }
