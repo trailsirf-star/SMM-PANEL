@@ -9,77 +9,99 @@ const providerApi = require('../services/providerApi');
 exports.importServicesFromProvider = async (req, res) => {
   try {
     const provider = await ApiProvider.findById(req.params.providerId);
-    if (!provider) return res.status(404).json({ success: false, error: 'Provider not found.' });
+    if (!provider) {
+      return res.status(404).json({ success: false, error: 'Provider not found.' });
+    }
 
     const settings = await Settings.getSettings();
-    const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
+    const commissionPercent = Number(settings.commissionPercent || 0);
+    const markupMultiplier = 1 + commissionPercent / 100;
 
-    const providerServices = await providerApi.getServices({
+    const response = await providerApi.getServices({
       apiUrl: provider.apiUrl,
       apiKey: provider.apiKey,
     });
 
+    const providerServices = Array.isArray(response)
+      ? response
+      : Array.isArray(response?.services)
+        ? response.services
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+    if (!Array.isArray(providerServices)) {
+      return res.status(500).json({
+        success: false,
+        error: 'Unexpected response format from provider services API.',
+      });
+    }
+
     let imported = 0;
+    let updated = 0;
+    let skipped = 0;
 
     for (const ps of providerServices) {
-      const exists = await Service.findOne({
+      if (!ps || ps.service == null || ps.name == null) {
+        skipped += 1;
+        continue;
+      }
+
+      const rawRate = Number(ps.rate ?? ps.price ?? ps.cost);
+      const providerCost = Number.isFinite(rawRate) ? rawRate * 280 : 0; // keep 280 only if provider returns USD
+      const sellPrice = Math.ceil(providerCost * markupMultiplier * 100) / 100;
+
+      const filter = {
         providerServiceId: String(ps.service),
         provider: provider._id,
-      });
+      };
 
-      if (exists) continue;
+      const existing = await Service.findOne(filter);
 
-      const rawRate = Number(ps.rate);
-      const cost = Number.isFinite(rawRate) ? rawRate : 0;
-
-      await Service.create({
-        name: ps.name,
-        category: ps.category || 'Other',
+      const payload = {
+        name: String(ps.name).trim(),
+        category: String(ps.category || 'Other').trim(),
         providerServiceId: String(ps.service),
-        providerCostPer1000: cost,
-        sellPricePer1000: Math.ceil(cost * markupMultiplier * 100) / 100,
+        providerCostPer1000: providerCost,
+        sellPricePer1000: sellPrice,
         minOrder: parseInt(ps.min, 10) || 100,
         maxOrder: parseInt(ps.max, 10) || 10000,
-        description: ps.type || '',
+        description: String(ps.type || '').trim(),
         provider: provider._id,
         status: 'disabled',
-      });
+      };
 
-      imported += 1;
+      if (existing) {
+        existing.name = payload.name;
+        existing.category = payload.category;
+        existing.providerCostPer1000 = payload.providerCostPer1000;
+        existing.sellPricePer1000 = payload.sellPricePer1000;
+        existing.minOrder = payload.minOrder;
+        existing.maxOrder = payload.maxOrder;
+        existing.description = payload.description;
+        existing.status = existing.status || 'disabled';
+
+        await existing.save();
+        updated += 1;
+      } else {
+        await Service.create(payload);
+        imported += 1;
+      }
     }
 
-    res.json({ success: true, imported, commissionPercent: settings.commissionPercent });
+    return res.json({
+      success: true,
+      imported,
+      updated,
+      skipped,
+      commissionPercent,
+    });
   } catch (err) {
     console.error('[Admin] Import services error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
-};
-
-exports.applyCommissionToServices = async (req, res) => {
-  try {
-    const { serviceIds } = req.body || {};
-    const settings = await Settings.getSettings();
-    const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
-
-    const filter =
-      Array.isArray(serviceIds) && serviceIds.length > 0
-        ? { _id: { $in: serviceIds } }
-        : {};
-
-    const services = await Service.find(filter);
-
-    let updated = 0;
-
-    for (const service of services) {
-      service.sellPricePer1000 = Math.ceil(service.providerCostPer1000 * markupMultiplier * 100) / 100;
-      await service.save();
-      updated += 1;
-    }
-
-    res.json({ success: true, updated, commissionPercent: settings.commissionPercent });
-  } catch (err) {
-    console.error('[Admin] Apply commission error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to apply commission.' });
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 };
 
