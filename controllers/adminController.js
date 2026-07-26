@@ -6,6 +6,9 @@ const ApiProvider = require('../models/ApiProvider');
 const Settings = require('../models/Settings');
 const providerApi = require('../services/providerApi');
 
+// Currency Conversion: Provider API returns USD. Multiply by 280 to convert to PKR.
+const EXCHANGE_RATE = 280; 
+
 // ---------- DASHBOARD ----------
 
 exports.getDashboard = async (req, res) => {
@@ -17,7 +20,6 @@ exports.getDashboard = async (req, res) => {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    // FIX: Only calculate revenue and profit for completed or partial orders
     const completedStatuses = ['completed', 'partial'];
 
     const [ordersToday, ordersThisMonth, ordersAllTime, revenueAgg, profitAgg, pendingPayments, newUsersToday, activeUsers, providers] =
@@ -48,7 +50,6 @@ exports.getDashboard = async (req, res) => {
     ]);
     const totalProviderCost = costAgg[0]?.total || 0;
 
-    // Orders per day for the last 7 days (for Chart.js)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -64,7 +65,6 @@ exports.getDashboard = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Fill in any missing days with 0 so the chart has a full 7-day axis.
     const chartLabels = [];
     const chartData = [];
     for (let i = 0; i < 7; i++) {
@@ -151,13 +151,8 @@ exports.refreshOrderStatus = async (req, res) => {
       populate: { path: 'provider' },
     });
 
-    if (!order) {
-      return res.status(404).json({ success: false, error: 'Order not found.' });
-    }
-
-    if (!order.providerOrderId || !order.service?.provider) {
-      return res.status(400).json({ success: false, error: 'This order has no linked provider order.' });
-    }
+    if (!order) return res.status(404).json({ success: false, error: 'Order not found.' });
+    if (!order.providerOrderId || !order.service?.provider) return res.status(400).json({ success: false, error: 'No linked provider.' });
 
     const result = await providerApi.getOrderStatus(
       { apiUrl: order.service.provider.apiUrl, apiKey: order.service.provider.apiKey },
@@ -200,10 +195,7 @@ exports.getPayments = async (req, res) => {
 exports.approvePayment = async (req, res) => {
   try {
     const tx = await Transaction.findById(req.params.id);
-
-    if (!tx || tx.status !== 'pending') {
-      return res.status(400).json({ success: false, error: 'Transaction not found or already reviewed.' });
-    }
+    if (!tx || tx.status !== 'pending') return res.status(400).json({ success: false, error: 'Invalid transaction.' });
 
     const user = await User.findById(tx.user);
     user.balance += tx.amount;
@@ -223,12 +215,9 @@ exports.approvePayment = async (req, res) => {
 
 exports.rejectPayment = async (req, res) => {
   try {
-    const { reason } = req.body;
+    const { reason } = req.body || {};
     const tx = await Transaction.findById(req.params.id);
-
-    if (!tx || tx.status !== 'pending') {
-      return res.status(400).json({ success: false, error: 'Transaction not found or already reviewed.' });
-    }
+    if (!tx || tx.status !== 'pending') return res.status(400).json({ success: false, error: 'Invalid transaction.' });
 
     tx.status = 'rejected';
     tx.adminNote = reason || 'No reason provided.';
@@ -249,16 +238,13 @@ exports.getUsers = async (req, res) => {
   try {
     const { q } = req.query;
     const filter = {};
-
     if (q) {
       filter.$or = [
         { name: { $regex: q, $options: 'i' } },
         { email: { $regex: q, $options: 'i' } },
       ];
     }
-
     const users = await User.find(filter).sort({ createdAt: -1 }).select('-password');
-
     res.render('admin/users', { title: 'Manage Users', users, q: q || '' });
   } catch (err) {
     console.error('[Admin] Users page error:', err.message);
@@ -283,22 +269,15 @@ exports.getUserDetail = async (req, res) => {
 
 exports.adjustBalance = async (req, res) => {
   try {
-    const { amount, reason } = req.body;
+    const { amount, reason } = req.body || {};
     const delta = parseFloat(amount);
-
-    if (!delta) {
-      return res.status(400).json({ success: false, error: 'Amount is required.' });
-    }
+    if (!delta) return res.status(400).json({ success: false, error: 'Amount is required.' });
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found.' });
 
     user.balance = Math.max(0, user.balance + delta);
     await user.save();
-
-    console.log(
-      `[Admin] Balance adjusted for ${user.email} by ${delta} (reason: ${reason || 'n/a'}) by admin ${req.user.email}`
-    );
 
     res.json({ success: true, balance: user.balance });
   } catch (err) {
@@ -339,9 +318,7 @@ exports.getServices = async (req, res) => {
 
 exports.createService = async (req, res) => {
   try {
-    const { name, category, providerServiceId, providerCostPer1000, sellPricePer1000, minOrder, maxOrder, description, providerId } =
-      req.body;
-
+    const { name, category, providerServiceId, providerCostPer1000, sellPricePer1000, minOrder, maxOrder, description, providerId } = req.body || {};
     await Service.create({
       name,
       category,
@@ -353,7 +330,6 @@ exports.createService = async (req, res) => {
       description: description || '',
       provider: providerId || null,
     });
-
     res.redirect('/admin/services');
   } catch (err) {
     console.error('[Admin] Create service error:', err.message);
@@ -376,19 +352,20 @@ exports.importServicesFromProvider = async (req, res) => {
       const exists = await Service.findOne({ providerServiceId: String(ps.service), provider: provider._id });
       if (exists) continue;
 
-      const cost = parseFloat(ps.rate) || 0;
+      const rawRate = parseFloat(ps.rate) || 0;
+      const costInPkr = rawRate * EXCHANGE_RATE;
 
       await Service.create({
         name: ps.name,
         category: ps.category || 'Other',
         providerServiceId: String(ps.service),
-        providerCostPer1000: cost,
-        sellPricePer1000: Math.ceil(cost * markupMultiplier * 100) / 100, // your commission %, admin can edit
+        providerCostPer1000: costInPkr,
+        sellPricePer1000: Math.ceil(costInPkr * markupMultiplier * 100) / 100,
         minOrder: parseInt(ps.min, 10) || 100,
         maxOrder: parseInt(ps.max, 10) || 10000,
         description: ps.type || '',
         provider: provider._id,
-        status: 'disabled', // imported as disabled so admin reviews pricing before going live
+        status: 'disabled',
       });
       imported += 1;
     }
@@ -400,38 +377,29 @@ exports.importServicesFromProvider = async (req, res) => {
   }
 };
 
-/**
- * Recalculates sellPricePer1000 for every service (or a specific list of
- * service IDs) using the current Settings.commissionPercent over each
- * service's providerCostPer1000. Lets the admin set one commission % and
- * apply it across the whole catalog in one click, instead of editing every
- * service's price by hand.
- */
 exports.applyCommissionToServices = async (req, res) => {
   try {
-    const { serviceIds } = req.body; // optional array — if omitted, applies to ALL services
+    const { serviceIds } = req.body || {}; 
     const settings = await Settings.getSettings();
     const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
 
     const filter = Array.isArray(serviceIds) && serviceIds.length > 0 ? { _id: { $in: serviceIds } } : {};
     const services = await Service.find(filter).populate('provider');
 
-    // FIX: Fetch fresh rates from the provider API to ensure the base cost is accurate
     const providerMap = new Map();
     services.forEach(s => {
-      if (s.provider) {
-        if (!providerMap.has(s.provider._id.toString())) {
-          providerMap.set(s.provider._id.toString(), s.provider);
-        }
+      if (s.provider && !providerMap.has(s.provider._id.toString())) {
+        providerMap.set(s.provider._id.toString(), s.provider);
       }
     });
 
-    const rateMap = new Map(); // key: providerServiceId, value: rate
+    const rateMap = new Map();
     for (const [id, provider] of providerMap) {
       try {
         const providerServices = await providerApi.getServices({ apiUrl: provider.apiUrl, apiKey: provider.apiKey });
         providerServices.forEach(ps => {
-          rateMap.set(String(ps.service), parseFloat(ps.rate) || 0);
+          const rawRate = parseFloat(ps.rate) || 0;
+          rateMap.set(String(ps.service), rawRate * EXCHANGE_RATE);
         });
       } catch (err) {
         console.error(`[Admin] Failed to sync rates for provider ${provider.name}:`, err.message);
@@ -441,13 +409,10 @@ exports.applyCommissionToServices = async (req, res) => {
     let updated = 0;
     for (const service of services) {
       let cost = service.providerCostPer1000;
-      
-      // If we fetched fresh data for this provider, update the cost in DB
       if (service.provider && rateMap.has(service.providerServiceId)) {
         cost = rateMap.get(service.providerServiceId);
         service.providerCostPer1000 = cost;
       }
-
       service.sellPricePer1000 = Math.ceil(cost * markupMultiplier * 100) / 100;
       await service.save();
       updated += 1;
@@ -462,8 +427,7 @@ exports.applyCommissionToServices = async (req, res) => {
 
 exports.updateService = async (req, res) => {
   try {
-    const { sellPricePer1000, minOrder, maxOrder, status } = req.body;
-
+    const { sellPricePer1000, minOrder, maxOrder, status } = req.body || {};
     const update = {};
     if (sellPricePer1000 !== undefined) update.sellPricePer1000 = parseFloat(sellPricePer1000);
     if (minOrder !== undefined) update.minOrder = parseInt(minOrder, 10);
@@ -488,17 +452,9 @@ exports.deleteService = async (req, res) => {
   }
 };
 
-/**
- * Bulk-sets status ('active' | 'disabled') on many services at once.
- * Pass { all: true } to apply to every service (e.g. "Enable All"), or
- * { serviceIds: [...] } to apply to a specific checked selection. Imported
- * services default to 'disabled' (see importServicesFromProvider) so admins
- * can review pricing first — this is how they go live without clicking
- * Save on every row individually.
- */
 exports.bulkUpdateServiceStatus = async (req, res) => {
   try {
-    const { serviceIds, status, all } = req.body;
+    const { serviceIds, status, all } = req.body || {};
 
     if (!['active', 'disabled'].includes(status)) {
       return res.status(400).json({ success: false, error: 'Invalid status.' });
@@ -515,7 +471,6 @@ exports.bulkUpdateServiceStatus = async (req, res) => {
     }
 
     const result = await Service.updateMany(filter, { $set: { status } });
-
     res.json({ success: true, updated: result.modifiedCount });
   } catch (err) {
     console.error('[Admin] Bulk update service status error:', err.message);
@@ -537,7 +492,7 @@ exports.getApiProviders = async (req, res) => {
 
 exports.createApiProvider = async (req, res) => {
   try {
-    const { name, apiUrl, apiKey } = req.body;
+    const { name, apiUrl, apiKey } = req.body || {};
     await ApiProvider.create({ name, apiUrl, apiKey });
     res.redirect('/admin/api-providers');
   } catch (err) {
@@ -549,53 +504,19 @@ exports.createApiProvider = async (req, res) => {
 exports.testApiProviderConnection = async (req, res) => {
   try {
     const provider = await ApiProvider.findById(req.params.id);
+    if (!provider) return res.status(404).json({ success: false, error: 'Provider not found.' });
 
-    if (!provider) {
-      return res.status(404).json({
-        success: false,
-        error: 'Provider not found.'
-      });
-    }
-
-    console.log("======================================");
-    console.log("TESTING PROVIDER CONNECTION");
-    console.log("Provider Name:", provider.name);
-    console.log("API URL:", provider.apiUrl);
-    console.log("API KEY:", provider.apiKey);
-    console.log("======================================");
-
-    const result = await providerApi.getBalance({
-      apiUrl: provider.apiUrl,
-      apiKey: provider.apiKey,
-    });
-
-    console.log("Provider returned:");
-    console.log(result);
+    const result = await providerApi.getBalance({ apiUrl: provider.apiUrl, apiKey: provider.apiKey });
 
     provider.balance = result.balance;
     provider.currency = result.currency;
     provider.lastSyncedAt = new Date();
-
     await provider.save();
 
-    return res.json({
-      success: true,
-      balance: result.balance,
-      currency: result.currency
-    });
-
+    res.json({ success: true, balance: result.balance, currency: result.currency });
   } catch (err) {
-
-    console.error("======================================");
-    console.error("PROVIDER CONNECTION FAILED");
-    console.error(err);
-    console.error("======================================");
-
-    return res.status(500).json({
-      success: false,
-      error: err.message
-    });
-
+    console.error('[Admin] Provider connection failed:', err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -638,8 +559,7 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    const { siteName, easypaisaNumber, easypaisaAccountName, currency, whatsappNumber, minimumDeposit, commissionPercent } =
-      req.body;
+    const { siteName, easypaisaNumber, easypaisaAccountName, currency, whatsappNumber, minimumDeposit, commissionPercent } = req.body || {};
 
     const settings = await Settings.getSettings();
     settings.siteName = siteName;
