@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const Order = require('../models/Order');
-const Service = require('../Service');
+const Service = require('../models/Service');
 const Transaction = require('../models/Transaction');
 const ApiProvider = require('../models/ApiProvider');
 const Settings = require('../models/Settings');
