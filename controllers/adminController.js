@@ -14,42 +14,25 @@ exports.importServicesFromProvider = async (req, res) => {
     }
 
     const settings = await Settings.getSettings();
-    const commissionPercent = Number(settings.commissionPercent || 0);
-    const markupMultiplier = 1 + commissionPercent / 100;
+    const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
 
-    const response = await providerApi.getServices({
+    const providerServices = await providerApi.getServices({
       apiUrl: provider.apiUrl,
       apiKey: provider.apiKey,
     });
-
-    const providerServices = Array.isArray(response)
-      ? response
-      : Array.isArray(response?.services)
-        ? response.services
-        : Array.isArray(response?.data)
-          ? response.data
-          : [];
-
-    if (!Array.isArray(providerServices)) {
-      return res.status(500).json({
-        success: false,
-        error: 'Unexpected response format from provider services API.',
-      });
-    }
 
     let imported = 0;
     let updated = 0;
     let skipped = 0;
 
     for (const ps of providerServices) {
-      if (!ps || ps.service == null || ps.name == null) {
+      if (!ps || ps.service == null || !ps.name) {
         skipped += 1;
         continue;
       }
 
-      const rawRate = Number(ps.rate ?? ps.price ?? ps.cost);
-      const providerCost = Number.isFinite(rawRate) ? rawRate * 280 : 0; // keep 280 only if provider returns USD
-      const sellPrice = Math.ceil(providerCost * markupMultiplier * 100) / 100;
+      const rawRate = Number(ps.rate);
+      const cost = Number.isFinite(rawRate) ? rawRate * EXCHANGE_RATE : 0;
 
       const filter = {
         providerServiceId: String(ps.service),
@@ -62,8 +45,8 @@ exports.importServicesFromProvider = async (req, res) => {
         name: String(ps.name).trim(),
         category: String(ps.category || 'Other').trim(),
         providerServiceId: String(ps.service),
-        providerCostPer1000: providerCost,
-        sellPricePer1000: sellPrice,
+        providerCostPer1000: cost,
+        sellPricePer1000: Math.ceil(cost * markupMultiplier * 100) / 100,
         minOrder: parseInt(ps.min, 10) || 100,
         maxOrder: parseInt(ps.max, 10) || 10000,
         description: String(ps.type || '').trim(),
@@ -79,7 +62,7 @@ exports.importServicesFromProvider = async (req, res) => {
         existing.minOrder = payload.minOrder;
         existing.maxOrder = payload.maxOrder;
         existing.description = payload.description;
-        existing.status = existing.status || 'disabled';
+        existing.status = 'disabled';
 
         await existing.save();
         updated += 1;
@@ -94,7 +77,7 @@ exports.importServicesFromProvider = async (req, res) => {
       imported,
       updated,
       skipped,
-      commissionPercent,
+      commissionPercent: settings.commissionPercent,
     });
   } catch (err) {
     console.error('[Admin] Import services error:', err.message);
