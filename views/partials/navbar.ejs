@@ -1,58 +1,79 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-  <div class="container">
-    <a class="navbar-brand fw-bold" href="<%= user ? '/dashboard' : '/login' %>">
-      <i class="fa-solid fa-bolt"></i> SMM Panel
+<nav class="navbar navbar-expand-lg sticky-top bg-white border-bottom" style="border-color: #e2e8f0 !important; z-index: 1030;">
+  <div class="container py-2">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="<%= user ? '/dashboard' : '/login' %>">
+      <span style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4f46e5, #818cf8); border-radius: 8px; color: white; font-size: 1rem;">
+        <i class="fa-solid fa-bolt"></i>
+      </span>
+      SMM Panel
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <span class="navbar-toggler-icon"></span>
+    
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-expanded="false">
+      <i class="fa-solid fa-bars text-dark"></i>
     </button>
+    
     <div class="collapse navbar-collapse" id="mainNav">
       <% if (user) { %>
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-lg-1">
           <li class="nav-item">
-            <a class="nav-link <%= currentPath === '/dashboard' ? 'active' : '' %>" href="/dashboard">Dashboard</a>
+            <a class="nav-link px-3 py-2 rounded-3 <%= currentPath === '/dashboard' ? 'active-user-nav' : 'text-muted' %>" href="/dashboard">Dashboard</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%= currentPath === '/services' ? 'active' : '' %>" href="/services">Services</a>
+            <a class="nav-link px-3 py-2 rounded-3 <%= currentPath === '/services' ? 'active-user-nav' : 'text-muted' %>" href="/services">Services</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%= currentPath === '/orders/new' ? 'active' : '' %>" href="/orders/new">New Order</a>
+            <a class="nav-link px-3 py-2 rounded-3 <%= currentPath === '/orders/new' ? 'active-user-nav' : 'text-muted' %>" href="/orders/new">New Order</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%= currentPath === '/orders' ? 'active' : '' %>" href="/orders">My Orders</a>
+            <a class="nav-link px-3 py-2 rounded-3 <%= currentPath === '/orders' ? 'active-user-nav' : 'text-muted' %>" href="/orders">My Orders</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%= currentPath === '/add-funds' ? 'active' : '' %>" href="/add-funds">Add Funds</a>
+            <a class="nav-link px-3 py-2 rounded-3 <%= currentPath === '/add-funds' ? 'active-user-nav' : 'text-muted' %>" href="/add-funds">Add Funds</a>
           </li>
           <% if (user.role === 'admin') { %>
             <li class="nav-item">
-              <a class="nav-link" href="/admin/dashboard"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+              <a class="nav-link px-3 py-2 rounded-3 text-primary fw-medium" href="/admin/dashboard"><i class="fa-solid fa-user-shield me-1"></i> Admin Panel</a>
             </li>
           <% } %>
         </ul>
-        <ul class="navbar-nav align-items-lg-center gap-2">
+        
+        <ul class="navbar-nav align-items-lg-center gap-3">
           <li class="nav-item">
-            <span class="badge bg-success-subtle text-success-emphasis fs-6 px-3 py-2">
+            <span class="badge d-inline-flex align-items-center gap-2 px-3 py-2" style="background-color: #ecfdf5; color: #065f46; font-weight: 500; border-radius: 999px; font-size: 0.9rem;">
               <i class="fa-solid fa-wallet"></i> Rs. <%= user.balance.toFixed(2) %>
             </span>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-              <i class="fa-solid fa-circle-user"></i> <%= user.name %>
+            <a class="nav-link d-flex align-items-center gap-2 text-dark" href="#" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+               <span style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 8px; color: #475569; font-weight: 700; font-size: 0.9rem;">
+                 <%= user.name.charAt(0).toUpperCase() %>
+               </span>
+               <span class="d-none d-lg-inline fw-medium"><%= user.name %></span>
+               <i class="fa-solid fa-chevron-down text-muted small d-none d-lg-inline"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="/profile">My Profile</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 12px; padding: 0.5rem; min-width: 200px;">
+              <li><a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2 text-dark" href="/profile"><i class="fa-solid fa-user text-muted w-4"></i> My Profile</a></li>
+              <li><hr class="dropdown-divider my-2"></li>
+              <li><a class="dropdown-item rounded-2 py-2 px-3 d-flex align-items-center gap-2 text-danger" href="/logout"><i class="fa-solid fa-right-from-bracket w-4"></i> Logout</a></li>
             </ul>
           </li>
         </ul>
       <% } else { %>
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
-          <li class="nav-item"><a class="nav-link" href="/signup">Sign Up</a></li>
+        <ul class="navbar-nav ms-auto d-flex align-items-center gap-2">
+          <li class="nav-item"><a class="nav-link text-muted px-3" href="/login">Log In</a></li>
+          <li class="nav-item"><a class="btn btn-primary px-4 py-2" href="/signup">Sign Up</a></li>
         </ul>
       <% } %>
     </div>
   </div>
 </nav>
+
+<style>
+  .active-user-nav {
+    background-color: #eef2ff;
+    color: #4f46e5 !important;
+    font-weight: 600;
+  }
+  .navbar-toggler:focus {
+    box-shadow: none;
+  }
+</style>
