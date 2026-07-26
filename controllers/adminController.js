@@ -458,102 +458,36 @@ exports.importServicesFromProvider = async (req, res) => {
 
 exports.applyCommissionToServices = async (req, res) => {
   try {
-    const { serviceIds } = req.body || {}; 
+    const { serviceIds } = req.body || {};
     const settings = await Settings.getSettings();
     const markupMultiplier = 1 + (settings.commissionPercent || 0) / 100;
 
-    const filter = Array.isArray(serviceIds) && serviceIds.length > 0 ? { _id: { $in: serviceIds } } : {};
-    const services = await Service.find(filter).populate('provider');
+    const filter =
+      Array.isArray(serviceIds) && serviceIds.length > 0
+        ? { _id: { $in: serviceIds } }
+        : {};
 
-    const providerMap = new Map();
-    services.forEach(s => {
-      if (s.provider && !providerMap.has(s.provider._id.toString())) {
-        providerMap.set(s.provider._id.toString(), s.provider);
-      }
-    });
-
-    const rateMap = new Map();
-    for (const [id, provider] of providerMap) {
-      try {
-        const providerServices = await providerApi.getServices({ apiUrl: provider.apiUrl, apiKey: provider.apiKey });
-        providerServices.forEach(ps => {
-          const rawRate = parseFloat(ps.rate) || 0;
-          rateMap.set(String(ps.service), rawRate * EXCHANGE_RATE);
-        });
-      } catch (err) {
-        console.error(`[Admin] Failed to sync rates for provider ${provider.name}:`, err.message);
-      }
-    }
+    const services = await Service.find(filter);
 
     let updated = 0;
+
     for (const service of services) {
-      let cost = service.providerCostPer1000;
-      if (service.provider && rateMap.has(service.providerServiceId)) {
-        cost = rateMap.get(service.providerServiceId);
-        service.providerCostPer1000 = cost;
-      }
-      service.sellPricePer1000 = Math.ceil(cost * markupMultiplier * 100) / 100;
+      service.sellPricePer1000 = Math.ceil(service.providerCostPer1000 * markupMultiplier * 100) / 100;
       await service.save();
       updated += 1;
     }
 
-    res.json({ success: true, updated, commissionPercent: settings.commissionPercent });
+    return res.json({
+      success: true,
+      updated,
+      commissionPercent: settings.commissionPercent,
+    });
   } catch (err) {
     console.error('[Admin] Apply commission error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to apply commission.' });
-  }
-};
-
-exports.updateService = async (req, res) => {
-  try {
-    const { sellPricePer1000, minOrder, maxOrder, status } = req.body || {};
-    const update = {};
-    if (sellPricePer1000 !== undefined) update.sellPricePer1000 = parseFloat(sellPricePer1000);
-    if (minOrder !== undefined) update.minOrder = parseInt(minOrder, 10);
-    if (maxOrder !== undefined) update.maxOrder = parseInt(maxOrder, 10);
-    if (status !== undefined) update.status = status;
-
-    await Service.findByIdAndUpdate(req.params.id, update);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('[Admin] Update service error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to update service.' });
-  }
-};
-
-exports.deleteService = async (req, res) => {
-  try {
-    await Service.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('[Admin] Delete service error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to delete service.' });
-  }
-};
-
-exports.bulkUpdateServiceStatus = async (req, res) => {
-  try {
-    const { serviceIds, status, all } = req.body || {};
-
-    if (!['active', 'disabled'].includes(status)) {
-      return res.status(400).json({ success: false, error: 'Invalid status.' });
-    }
-
-    let filter;
-    if (all === true) {
-      filter = {};
-    } else {
-      if (!Array.isArray(serviceIds) || serviceIds.length === 0) {
-        return res.status(400).json({ success: false, error: 'No services selected.' });
-      }
-      filter = { _id: { $in: serviceIds } };
-    }
-
-    const result = await Service.updateMany(filter, { $set: { status } });
-    res.json({ success: true, updated: result.modifiedCount });
-  } catch (err) {
-    console.error('[Admin] Bulk update service status error:', err.message);
-    res.status(500).json({ success: false, error: 'Failed to update services.' });
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to apply commission.',
+    });
   }
 };
 
