@@ -1,0 +1,99 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">Welcome back, <%= user.name %> 👋</h3>
+  <p class="text-muted mb-0">Here's what's happening with your account.</p>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Wallet Balance</div>
+        <div class="fs-4 fw-bold text-success"><%= settings.currency %> <%= user.balance.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Orders</div>
+        <div class="fs-4 fw-bold"><%= totalOrders %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Completed Orders</div>
+        <div class="fs-4 fw-bold"><%= completedOrders %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Spent</div>
+        <div class="fs-4 fw-bold"><%= settings.currency %> <%= totalSpent.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <a href="/orders/new" class="card text-decoration-none shadow-sm border-0 h-100">
+      <div class="card-body text-center py-4">
+        <i class="fa-solid fa-cart-plus fa-2x text-primary mb-2"></i>
+        <div class="fw-semibold">Place New Order</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/add-funds" class="card text-decoration-none shadow-sm border-0 h-100">
+      <div class="card-body text-center py-4">
+        <i class="fa-solid fa-wallet fa-2x text-success mb-2"></i>
+        <div class="fw-semibold">Add Funds (Easypaisa)</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/services" class="card text-decoration-none shadow-sm border-0 h-100">
+      <div class="card-body text-center py-4">
+        <i class="fa-solid fa-list fa-2x text-info mb-2"></i>
+        <div class="fw-semibold">Browse Services</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white fw-semibold">Recent Orders</div>
+  <div class="table-responsive">
+    <table class="table table-modern mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Link</th>
+          <th>Qty</th>
+          <th>Charge</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (recentOrders.length === 0) { %>
+          <tr><td colspan="6" class="text-center text-muted py-4">No orders yet. <a href="/orders/new">Place your first order</a>.</td></tr>
+        <% } %>
+        <% recentOrders.forEach(order => { %>
+          <tr>
+            <td><%= order.service ? order.service.name : 'Deleted Service' %></td>
+            <td class="text-truncate" style="max-width: 200px;"><%= order.link %></td>
+            <td><%= order.quantity %></td>
+            <td><%= settings.currency %> <%= order.charge.toFixed(2) %></td>
+            <td><span class="badge status-badge status-<%= order.status.replace(' ', '-') %>"><%= order.status %></span></td>
+            <td><%= order.createdAt.toLocaleDateString() %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>

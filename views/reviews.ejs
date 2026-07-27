@@ -1,0 +1,33 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">Client Reviews</h3>
+  <p class="text-muted mb-0">What our clients are saying about MRFSMM.</p>
+</div>
+
+<div class="row g-4">
+  <% const reviews = [
+    { name: 'Ayesha K.', text: 'Fast delivery and the support team actually replies. My orders always start within minutes.' },
+    { name: 'Bilal R.', text: 'Good rates compared to other panels and the dashboard is easy to use.' },
+    { name: 'Sana M.', text: 'Added funds via Easypaisa and my balance was approved the same day. No issues.' },
+    { name: 'Hamza T.', text: 'Been using this panel for a few months now. Consistent quality, will keep ordering.' },
+    { name: 'Zoya A.', text: 'Simple to place an order and track progress. Exactly what I needed.' },
+    { name: 'Usman F.', text: 'Reasonable pricing and my questions were answered quickly.' },
+  ]; %>
+
+  <% reviews.forEach(r => { %>
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body p-4">
+          <div class="text-warning mb-2">
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <p class="mb-3">"<%= r.text %>"</p>
+          <div class="fw-semibold text-dark">— <%= r.name %></div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>

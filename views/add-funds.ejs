@@ -1,0 +1,81 @@
+<h3 class="fw-bold mb-4">Add Funds via Easypaisa</h3>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-3"><i class="fa-solid fa-circle-info text-primary"></i> Payment Instructions</h6>
+        <p class="mb-1">Send your payment to:</p>
+        <div class="p-3 bg-light rounded mb-3">
+          <div><strong>Easypaisa Number:</strong> <%= settings.easypaisaNumber || 'Not configured yet' %></div>
+          <div><strong>Account Name:</strong> <%= settings.easypaisaAccountName || 'Not configured yet' %></div>
+        </div>
+        <p class="text-muted small mb-0">
+          Minimum deposit: <%= settings.currency %> <%= settings.minimumDeposit %>.
+          After sending payment, fill out the form with the amount and
+          upload a screenshot. Your balance will be added after admin approval.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="alert alert-success"><%= message %></div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+
+        <form method="POST" action="/add-funds" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Amount (<%= settings.currency %>)</label>
+            <input type="number" name="amount" min="<%= settings.minimumDeposit %>" step="0.01" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Payment Screenshot</label>
+            <input type="file" name="screenshot" accept="image/png,image/jpeg,image/webp" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit for Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-header bg-white fw-semibold">Recent Fund Requests</div>
+  <div class="table-responsive">
+    <table class="table mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Admin Note</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (recent.length === 0) { %>
+          <tr><td colspan="4" class="text-center text-muted py-4">No fund requests yet.</td></tr>
+        <% } %>
+        <% recent.forEach(tx => { %>
+          <tr>
+            <td><%= settings.currency %> <%= tx.amount.toFixed(2) %></td>
+            <td>
+              <span class="badge
+                <%= tx.status === 'approved' ? 'bg-success' : tx.status === 'rejected' ? 'bg-danger' : 'bg-warning text-dark' %>">
+                <%= tx.status %>
+              </span>
+            </td>
+            <td><%= tx.adminNote || '-' %></td>
+            <td><%= tx.createdAt.toLocaleString() %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
