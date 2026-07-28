@@ -1,0 +1,314 @@
+/* =========================================
+   ADD FUNDS PAGE — PREMIUM PAYMENT UI STYLES
+   Scoped under .af-* — depends on design tokens
+   defined in style.css (--brand-primary, --radius-*,
+   --shadow-*, --text-*, --bg-*, --border-color).
+   Only loaded on the Add Funds page.
+   ========================================= */
+
+
+  /* Scoped to .af (Add Funds page) — reuses existing design tokens from style.css */
+  .af { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .af-head { display: flex; align-items: flex-start; gap: 1rem; text-align: left; }
+  .af-head-icon {
+    width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--brand-primary), #818cf8);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.5);
+  }
+  .af-title { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.35rem; letter-spacing: -0.03em; }
+  .af-subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5; max-width: 60ch; }
+
+  .af-banner { display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1.1rem; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; }
+  .af-banner-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .af-banner-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+  /* ---------- Payment method cards ---------- */
+  .af-methods { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+  @media (min-width: 700px) {
+    .af-methods { grid-template-columns: 1fr 1fr; }
+  }
+
+  .af-pay-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    min-width: 0;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .af-pay-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+  .af-pay-card-green { border-top: 3px solid #0ea55e; }
+  .af-pay-card-gold { border-top: 3px solid #f0b90b; }
+
+  .af-pay-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+  .af-brand { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+
+  .af-logo {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; background: var(--brand-primary-light);
+  }
+  .af-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .af-logo-fallback { display: none; font-weight: 800; font-size: 0.85rem; color: var(--brand-primary); }
+  .af-logo-fallback-active img { display: none; }
+  .af-logo-fallback-active .af-logo-fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .af-logo-easypaisa.af-logo-fallback-active { background: #0ea55e1a; }
+  .af-logo-easypaisa .af-logo-fallback { color: #0ea55e; }
+  .af-logo-binance.af-logo-fallback-active { background: #f0b90b1a; }
+  .af-logo-binance .af-logo-fallback { color: #d4a106; font-size: 1.1rem; }
+
+  .af-pay-name { font-weight: 700; font-size: 1.05rem; line-height: 1.2; }
+  .af-pay-type { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem; }
+
+  .af-verified {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700;
+    padding: 0.3rem 0.6rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  }
+
+  .af-field { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; font-size: 0.88rem; }
+  .af-field-label { color: var(--text-secondary); }
+  .af-field-value { font-weight: 600; text-align: right; word-break: break-word; }
+
+  .af-number-box {
+    background: var(--bg-body);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .af-number-label { color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .af-number-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-width: 0; }
+  .af-number {
+    font-size: clamp(1.05rem, 5vw, 1.3rem); font-weight: 800; letter-spacing: 0.02em; color: var(--text-primary);
+    white-space: nowrap; overflow-x: auto; min-width: 0; scrollbar-width: none;
+  }
+  .af-number::-webkit-scrollbar { display: none; }
+  .af-number-wrap { font-size: clamp(0.72rem, 3.2vw, 0.85rem); font-weight: 700; letter-spacing: 0; }
+
+  .af-copy-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--brand-primary); color: #fff; border: none;
+    padding: 0.5rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; flex-shrink: 0; transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .af-copy-btn:hover { background: var(--brand-primary-hover); }
+  .af-copy-btn:active { transform: scale(0.92); }
+  .af-copy-btn .fa-check { display: none; }
+  .af-copy-btn.af-copied { background: #059669; animation: afCopyPop 0.3s ease; }
+  .af-copy-btn.af-copied .fa-copy { display: none; }
+  .af-copy-btn.af-copied .fa-check { display: inline; }
+  @keyframes afCopyPop {
+    0% { transform: scale(0.9); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  .af-soon-state {
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.4rem;
+    background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: var(--radius-md);
+    padding: 1.75rem 1rem;
+  }
+  .af-soon-icon {
+    width: 42px; height: 42px; border-radius: 50%; background: #fef3c7; color: #b45309;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 0.2rem;
+  }
+  .af-soon-title { font-weight: 700; font-size: 0.92rem; }
+  .af-soon-desc { color: var(--text-secondary); font-size: 0.8rem; max-width: 30ch; }
+
+  /* ---------- Payment status card ---------- */
+  .af-status-card {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+    padding: 0.9rem 1.1rem;
+  }
+  .af-status-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: #22c55e; flex-shrink: 0;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+    animation: afPulse 2s ease-in-out infinite;
+  }
+  @keyframes afPulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15); }
+    50% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0.08); }
+  }
+  .af-status-title { font-weight: 700; font-size: 0.9rem; }
+  .af-status-sub { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.1rem; }
+
+  /* ---------- Generic card ---------- */
+  .af-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+  }
+  .af-card-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 1.25rem; }
+
+  .af-card-glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  /* ---------- Timeline ---------- */
+  .af-timeline { display: flex; flex-direction: column; }
+  .af-step { display: flex; gap: 1rem; position: relative; padding-bottom: 1.75rem; }
+  .af-step:last-child { padding-bottom: 0; }
+  .af-step::before {
+    content: ''; position: absolute; left: 19px; top: 40px; bottom: 0;
+    width: 2px; background: var(--border-color);
+  }
+  .af-step:last-child::before { display: none; }
+  .af-step-icon {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: var(--brand-primary-light); color: var(--brand-primary);
+    display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+    z-index: 1;
+  }
+  .af-step-icon-final { background: #ecfdf5; color: #059669; }
+  .af-step-body { padding-top: 0.35rem; }
+  .af-step-title { font-weight: 700; font-size: 0.95rem; }
+  .af-step-desc { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.15rem; }
+
+  /* ---------- Form ---------- */
+  .af-form-group { margin-bottom: 1.5rem; }
+  .af-form-group:last-of-type { margin-bottom: 1.75rem; }
+  .af-label { display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.5rem; }
+  .af-hint { display: block; color: var(--text-muted); font-size: 0.78rem; margin-top: 0.4rem; }
+
+  .af-amount-wrap {
+    display: flex; align-items: stretch; border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); overflow: hidden; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .af-amount-wrap:focus-within { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-light); }
+  .af-amount-currency {
+    display: flex; align-items: center; padding: 0 0.9rem; background: var(--bg-body);
+    color: var(--text-secondary); font-weight: 700; font-size: 0.85rem; border-right: 1px solid var(--border-color);
+  }
+  .af-input, .af-amount-input {
+    border: none; outline: none; padding: 0.85rem 1rem; font-size: 1rem; width: 100%; min-width: 0;
+    background: #fff; color: var(--text-primary); font-weight: 600;
+  }
+
+  .af-dropzone {
+    border: 2px dashed var(--border-color); border-radius: var(--radius-lg);
+    background: var(--bg-body); padding: 2rem 1.25rem; text-align: center;
+    cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .af-dropzone:hover, .af-dropzone.af-dragover { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+  .af-dropzone.af-dragover .af-dropzone-icon { transform: scale(1.15); }
+  .af-dropzone-icon { font-size: 1.8rem; color: var(--brand-primary); margin-bottom: 0.75rem; transition: transform 0.2s ease; }
+  .af-dropzone-text { font-size: 0.92rem; color: var(--text-primary); }
+  .af-dropzone-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+  .af-dropzone-filled { display: flex; align-items: center; gap: 1rem; text-align: left; }
+  .af-dropzone-preview {
+    width: 64px; height: 64px; border-radius: var(--radius-md); object-fit: cover;
+    border: 1px solid var(--border-color); flex-shrink: 0; background: #fff;
+    animation: afFadeIn 0.3s ease;
+  }
+  @keyframes afFadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .af-dropzone-fileinfo { min-width: 0; flex: 1; }
+  .af-dropzone-filename { font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .af-dropzone-filesize { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem; }
+  .af-dropzone-actions { display: flex; align-items: center; gap: 0.9rem; margin-top: 0.5rem; flex-wrap: wrap; }
+  .af-replace-btn, .af-remove-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: none; border: none; font-weight: 600;
+    font-size: 0.82rem; cursor: pointer; padding: 0;
+  }
+  .af-replace-btn { color: var(--brand-primary); }
+  .af-replace-btn:hover { text-decoration: underline; }
+  .af-remove-btn { color: #dc2626; }
+  .af-remove-btn:hover { text-decoration: underline; }
+
+  .af-submit-btn {
+    width: 100%; border: none; border-radius: var(--radius-md);
+    padding: 0.95rem 1.5rem; font-size: 0.98rem; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, var(--brand-primary), #818cf8);
+    cursor: pointer; box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.5);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .af-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -6px rgba(79, 70, 229, 0.55); }
+  .af-submit-btn:active { transform: translateY(0); }
+  .af-submit-btn:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
+  .af-submit-spinner { display: none; align-items: center; gap: 0.5rem; }
+  .af-submit-btn.af-loading .af-submit-label { display: none; }
+  .af-submit-btn.af-loading .af-submit-spinner { display: inline-flex; }
+
+  /* ---------- Payment tips card ---------- */
+  .af-tips-card {
+    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+    border: 1px solid #e0e7ff; border-radius: var(--radius-lg); padding: 1.5rem;
+  }
+  .af-tips-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+  .af-security-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    background: #fff; color: var(--brand-primary); display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; box-shadow: var(--shadow-sm);
+  }
+  .af-security-title { font-weight: 700; }
+  .af-tips-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+  .af-tips-list li {
+    display: flex; align-items: flex-start; gap: 0.55rem;
+    color: var(--text-secondary); font-size: 0.86rem; line-height: 1.5;
+  }
+  .af-tips-list li i { color: #059669; margin-top: 0.15rem; flex-shrink: 0; }
+
+  /* ---------- Recent requests table ---------- */
+  .af-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .af-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 480px; }
+  .af-table th {
+    text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.03em; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-color);
+  }
+  .af-table td { padding: 0.85rem 0.75rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+  .af-table tr:last-child td { border-bottom: none; }
+  .af-table tbody tr:hover td { background: var(--bg-body); }
+  .af-table-empty { text-align: center; padding: 0; }
+
+  .af-empty-illustration { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 2.75rem 1rem; }
+  .af-empty-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--bg-body);
+    color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 0.4rem;
+  }
+  .af-empty-title { font-weight: 600; color: var(--text-primary); font-size: 0.92rem; }
+  .af-empty-sub { color: var(--text-muted); font-size: 0.8rem; }
+
+  .af-status {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: capitalize;
+  }
+  .af-status-icon { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .af-status-approved { background: #ecfdf5; color: #059669; }
+  .af-status-rejected { background: #fef2f2; color: #dc2626; }
+  .af-status-pending { background: #fffbeb; color: #b45309; }
+
+  /* ---------- Responsive polish ---------- */
+  @media (max-width: 480px) {
+    .af-title { font-size: 1.4rem; }
+    .af-pay-card, .af-card { padding: 1.15rem; }
+    .af-number { font-size: 1.05rem; }
+  }
+
+  /* ---------- Accessibility: keyboard focus states ---------- */
+  .af-copy-btn:focus-visible,
+  .af-replace-btn:focus-visible,
+  .af-remove-btn:focus-visible,
+  .af-submit-btn:focus-visible,
+  .af-dropzone:focus-visible,
+  .af-amount-wrap:focus-within {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
