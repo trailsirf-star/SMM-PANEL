@@ -1,0 +1,338 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">Manage Services</h3>
+  <p class="text-muted mb-0">Add, import, and manage all services available to your users.</p>
+</div>
+
+<!-- Commission Banner -->
+<div class="alert d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-4" style="background-color: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 12px; padding: 1rem 1.25rem;">
+  <div class="d-flex align-items-center mb-2 mb-md-0">
+    <i class="fa-solid fa-percent me-3 fs-5"></i>
+    <span>Your current commission is <strong><%= settings.commissionPercent %>%</strong> over provider cost. <a href="/admin/settings" class="fw-semibold text-dark">Edit</a></span>
+  </div>
+  <button class="btn btn-sm btn-primary px-3 py-2" id="applyCommissionBtn">
+    <i class="fa-solid fa-rocket me-1"></i> Apply <%= settings.commissionPercent %>% to All
+  </button>
+</div>
+
+<div id="commissionResult"></div>
+
+<div class="row g-4 mb-4">
+  <!-- Add Manual Service -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+      <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+        <h6 class="fw-bold mb-0"><i class="fa-solid fa-plus-circle text-muted me-2"></i>Add New Service Manually</h6>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="/admin/services">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Service Name</label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Instagram Followers" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Category</label>
+              <input type="text" name="category" class="form-control" placeholder="e.g. Instagram" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Provider Service ID</label>
+              <input type="text" name="providerServiceId" class="form-control" placeholder="12345" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Provider</label>
+              <select name="providerId" class="form-select">
+                <option value="">No Provider (manual)</option>
+                <% providers.forEach(p => { %>
+                  <option value="<%= p._id %>"><%= p.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Provider Cost / 1000</label>
+              <input type="number" step="0.01" name="providerCostPer1000" class="form-control" placeholder="0.00" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Sell Price / 1000</label>
+              <input type="number" step="0.01" name="sellPricePer1000" class="form-control" placeholder="0.00" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Min Order</label>
+              <input type="number" name="minOrder" class="form-control" placeholder="10" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Max Order</label>
+              <input type="number" name="maxOrder" class="form-control" placeholder="10000" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control" rows="2" placeholder="Optional description of the service"></textarea>
+            </div>
+            <div class="col-12 mt-4">
+              <button type="submit" class="btn btn-primary w-100 py-2.5">Add Service</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Services -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+      <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+        <h6 class="fw-bold mb-0"><i class="fa-solid fa-cloud-arrow-down text-muted me-2"></i>Import Services From Provider</h6>
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted small">
+          Pulls the full service list from a connected provider and imports any new ones as <strong>disabled</strong> (with a default 30% markup) so you can review pricing before enabling them.
+        </p>
+        <% if (providers.length === 0) { %>
+          <div class="alert alert-info d-flex align-items-center" style="border-radius: 12px;">
+            <i class="fa-solid fa-info-circle me-2"></i> No API providers configured yet. <a href="/admin/api-providers" class="ms-1 fw-semibold">Add one first</a>.
+          </div>
+        <% } %>
+        
+        <div class="d-flex flex-column gap-2">
+          <% providers.forEach(p => { %>
+            <div class="d-flex justify-content-between align-items-center p-3 border bg-light" style="border-radius: 12px; border-color: #e2e8f0 !important;">
+              <div class="d-flex align-items-center text-dark fw-medium">
+                <i class="fa-solid fa-server me-2 text-muted"></i> <%= p.name %>
+              </div>
+              <button class="btn btn-sm btn-primary js-import-btn d-inline-flex align-items-center gap-1.5" data-id="<%= p._id %>">
+                <i class="fa-solid fa-download"></i> Import
+              </button>
+            </div>
+          <% }) %>
+        </div>
+        
+        <div id="importResult" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="card shadow-sm border-0 mb-4" style="border-radius: 12px; border: 1px solid #e2e8f0; background-color: #ffffff;">
+  <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3">
+    <div class="d-flex flex-wrap gap-2 mb-2 mb-md-0">
+      <button class="btn btn-sm btn-success d-inline-flex align-items-center gap-1.5" id="enableAllBtn">
+        <i class="fa-solid fa-check-double"></i> Enable All
+      </button>
+      <button class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1.5" id="enableSelectedBtn">
+        <i class="fa-solid fa-check"></i> Enable Selected
+      </button>
+      <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5" id="disableSelectedBtn">
+        <i class="fa-solid fa-xmark"></i> Disable Selected
+      </button>
+    </div>
+    <div id="bulkResult" class="small text-muted fw-medium"></div>
+  </div>
+</div>
+
+<!-- Services Table -->
+<div class="card shadow-sm border-0" style="border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table table-modern align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width: 40px;"><input type="checkbox" id="selectAllCheckbox" class="form-check-input"></th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Provider</th>
+          <th>Cost/1000</th>
+          <th>Sell/1000</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (services.length === 0) { %>
+          <tr>
+            <td colspan="10" class="text-center text-muted py-5">
+              <i class="fa-solid fa-cube fa-3x mb-3 opacity-25"></i>
+              <h6 class="fw-bold text-dark">No services found</h6>
+              <div>Add a service manually or import from a provider to get started.</div>
+            </td>
+          </tr>
+        <% } %>
+        <% services.forEach(s => { %>
+          <tr data-service-id="<%= s._id %>">
+            <td><input type="checkbox" class="js-row-checkbox form-check-input"></td>
+            <td class="fw-semibold text-dark"><%= s.name %></td>
+            <td class="text-muted"><%= s.category %></td>
+            <td class="text-muted"><%= s.provider ? s.provider.name : 'Manual' %></td>
+            <td class="text-muted"><%= settings.currency %> <%= s.providerCostPer1000.toFixed(2) %></td>
+            <td>
+              <input type="number" step="0.01" class="form-control form-control-sm js-sell-price" style="width:100px; border-radius: 6px;" value="<%= s.sellPricePer1000.toFixed(2) %>">
+            </td>
+            <td class="text-muted"><%= s.minOrder %></td>
+            <td class="text-muted"><%= s.maxOrder %></td>
+            <td>
+              <select class="form-select form-select-sm js-status-select" style="width:110px; border-radius: 6px;">
+                <option value="active" <%= s.status === 'active' ? 'selected' : '' %>>Active</option>
+                <option value="disabled" <%= s.status === 'disabled' ? 'selected' : '' %>>Disabled</option>
+              </select>
+            </td>
+            <td class="text-end">
+              <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-sm btn-light js-save-btn d-inline-flex align-items-center gap-1.5" style="border: 1px solid #e2e8f0; color: #475569; font-weight: 500;">
+                  <i class="fa-solid fa-floppy-disk"></i> Save
+                </button>
+                <button class="btn btn-sm btn-light js-delete-btn d-inline-flex align-items-center justify-content-center" style="border: 1px solid #fecaca; color: #dc2626; font-weight: 500; width: 32px; height: 32px;">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.getElementById('applyCommissionBtn').addEventListener('click', async () => {
+    if (!confirm('This will recalculate the sell price for EVERY service using your current commission %. Continue?')) return;
+
+    const btn = document.getElementById('applyCommissionBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Applying...';
+
+    try {
+      const res = await fetch('/admin/services/apply-commission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), // omit serviceIds to apply to all
+      });
+      const data = await res.json();
+
+      const resultDiv = document.getElementById('commissionResult');
+      if (data.success) {
+        resultDiv.innerHTML = `<div class="alert alert-success mt-2"><i class="fa-solid fa-check-circle me-2"></i>Updated ${data.updated} service(s) to ${data.commissionPercent}% commission. Reloading...</div>`;
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        resultDiv.innerHTML = `<div class="alert alert-danger mt-2">${data.error}</div>`;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rocket me-1"></i> Apply Commission';
+      }
+    } catch (err) {
+      alert('Network error while applying commission.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rocket me-1"></i> Apply Commission';
+    }
+  });
+
+  document.querySelectorAll('.js-import-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Importing...';
+      try {
+        const res = await fetch(`/admin/services/import/${btn.dataset.id}`, { method: 'POST' });
+        const data = await res.json();
+        const resultDiv = document.getElementById('importResult');
+        if (data.success) {
+          resultDiv.innerHTML = `<div class="alert alert-success mt-2"><i class="fa-solid fa-check-circle me-2"></i>Imported ${data.imported} new service(s), updated ${data.updated} existing service(s), skipped ${data.skipped || 0}. Reloading...</div>`;
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger mt-2">${data.error}</div>`;
+        }
+      } catch (err) {
+        alert('Network error during import.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-download"></i> Import';
+      }
+    });
+  });
+
+  document.querySelectorAll('.js-save-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('tr');
+      const id = row.dataset.serviceId;
+      const sellPricePer1000 = row.querySelector('.js-sell-price').value;
+      const status = row.querySelector('.js-status-select').value;
+
+      const res = await fetch(`/admin/services/${id}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellPricePer1000, status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Saved!';
+        btn.classList.add('text-success');
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save';
+          btn.classList.remove('text-success');
+        }, 1200);
+      } else {
+        alert(data.error || 'Failed to update.');
+      }
+    });
+  });
+
+  document.querySelectorAll('.js-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this service permanently?')) return;
+      const row = btn.closest('tr');
+      const id = row.dataset.serviceId;
+      const res = await fetch(`/admin/services/${id}/delete`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) row.remove();
+      else alert(data.error || 'Failed to delete.');
+    });
+  });
+
+  // ---------- Bulk status actions ----------
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', () => {
+      document.querySelectorAll('.js-row-checkbox').forEach(cb => (cb.checked = selectAllCheckbox.checked));
+    });
+  }
+
+  function getSelectedServiceIds() {
+    return Array.from(document.querySelectorAll('.js-row-checkbox:checked')).map(
+      cb => cb.closest('tr').dataset.serviceId
+    );
+  }
+
+  async function bulkSetStatus({ status, all = false, serviceIds = [] }) {
+    const bulkResult = document.getElementById('bulkResult');
+    try {
+      const res = await fetch('/admin/services/bulk-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(all ? { status, all: true } : { status, serviceIds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        bulkResult.innerHTML = `<span class="text-success"><i class="fa-solid fa-check-circle me-1"></i>Updated ${data.updated} service(s). Reloading...</span>`;
+        setTimeout(() => window.location.reload(), 900);
+      } else {
+        bulkResult.innerHTML = `<span class="text-danger">${data.error}</span>`;
+      }
+    } catch (err) {
+      bulkResult.innerHTML = `<span class="text-danger">Network error updating services.</span>`;
+    }
+  }
+
+  document.getElementById('enableAllBtn').addEventListener('click', () => {
+    if (!confirm('Set EVERY service (across all providers) to Active?')) return;
+    bulkSetStatus({ status: 'active', all: true });
+  });
+
+  document.getElementById('enableSelectedBtn').addEventListener('click', () => {
+    const ids = getSelectedServiceIds();
+    if (ids.length === 0) return alert('Select at least one service first.');
+    bulkSetStatus({ status: 'active', serviceIds: ids });
+  });
+
+  document.getElementById('disableSelectedBtn').addEventListener('click', () => {
+    const ids = getSelectedServiceIds();
+    if (ids.length === 0) return alert('Select at least one service first.');
+    bulkSetStatus({ status: 'disabled', serviceIds: ids });
+  });
+</script>

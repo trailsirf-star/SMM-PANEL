@@ -1,0 +1,105 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">Site Settings</h3>
+  <p class="text-muted mb-0">Manage your panel configuration, payment details, and commission rates.</p>
+</div>
+
+<% if (typeof message !== 'undefined' && message) { %>
+  <div class="alert alert-success d-flex align-items-center shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #d1fae5; background-color: #ecfdf5; color: #065f46; padding: 1rem 1.25rem; max-width: 700px;">
+    <i class="fa-solid fa-check-circle me-3 fs-5"></i>
+    <div><%= message %></div>
+  </div>
+<% } %>
+
+<div class="card shadow-sm border-0" style="max-width: 700px; border-radius: 16px !important; border: 1px solid #e2e8f0;">
+  <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+    <h5 class="mb-0 fw-bold">General Configuration</h5>
+  </div>
+  <div class="card-body p-4">
+    <form method="POST" action="/admin/settings">
+      
+      <div class="mb-4">
+        <label class="form-label">Site Name</label>
+        <input type="text" name="siteName" class="form-control" value="<%= settings.siteName %>" required>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Currency</label>
+        <input type="text" name="currency" class="form-control" value="<%= settings.currency %>" required>
+        <div class="form-text">The currency symbol used across your panel (e.g., Rs, $, €).</div>
+      </div>
+
+      <hr class="my-4" style="border-color: #e2e8f0;">
+
+      <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 700;">Payment Details</h6>
+
+      <div class="mb-4">
+        <label class="form-label">Easypaisa Number</label>
+        <input type="text" name="easypaisaNumber" class="form-control" value="<%= settings.easypaisaNumber %>" placeholder="03XXXXXXXXX">
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Easypaisa Account Name</label>
+        <input type="text" name="easypaisaAccountName" class="form-control" value="<%= settings.easypaisaAccountName %>" placeholder="John Doe">
+      </div>
+
+      <hr class="my-4" style="border-color: #e2e8f0;">
+
+      <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 700;">Binance Pay Details</h6>
+
+      <div class="mb-4">
+        <label class="form-label">Binance ID / UID</label>
+        <input type="text" name="binanceId" class="form-control" value="<%= settings.binanceId %>" placeholder="e.g. 123456789">
+        <div class="form-text">The Binance Pay ID or UID users should send money to.</div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Binance Pay Label</label>
+        <input type="text" name="binancePayLabel" class="form-control" value="<%= settings.binancePayLabel || 'Binance Pay ID' %>" placeholder="Binance Pay ID">
+        <div class="form-text">Label shown next to the Binance ID on the Add Funds page (e.g. "Binance Pay ID", "Binance UID").</div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">WhatsApp Contact Number</label>
+        <input type="text" name="whatsappNumber" class="form-control" value="<%= settings.whatsappNumber %>" placeholder="+92XXXXXXXXXX">
+      </div>
+
+      <hr class="my-4" style="border-color: #e2e8f0;">
+
+      <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 700;">Finance & Commission</h6>
+
+      <div class="mb-4">
+        <label class="form-label">Minimum Deposit</label>
+        <div class="input-group">
+          <span class="input-group-text" style="background-color: #f8fafc; border-color: #e2e8f0; color: #64748b; font-weight: 600;">
+            <%= settings.currency %>
+          </span>
+          <input type="number" step="0.01" name="minimumDeposit" class="form-control" value="<%= settings.minimumDeposit %>" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Exchange Rate (USD → PKR)</label>
+        <input type="number" step="0.01" min="1" name="exchangeRate" class="form-control" value="<%= settings.exchangeRate %>" required>
+        <div class="form-text">
+          <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+          Used while importing provider services. Changing this does not immediately update prices; prices update after clicking Import Services.
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Your Commission (%)</label>
+        <input type="number" step="0.01" name="commissionPercent" class="form-control" value="<%= settings.commissionPercent %>" required>
+        <div class="form-text">
+          <i class="fa-solid fa-circle-info me-1 text-primary"></i> 
+          Applied as your default markup over provider cost when importing new services, and available as a one-click bulk update on the Services page.
+        </div>
+      </div>
+
+      <div class="d-grid mt-4 pt-2">
+        <button type="submit" class="btn btn-primary py-2.5 fw-medium">
+          <i class="fa-solid fa-floppy-disk me-2"></i> Save Settings
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

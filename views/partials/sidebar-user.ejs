@@ -1,0 +1,86 @@
+<aside class="admin-sidebar">
+  <a href="/dashboard" class="sidebar-brand text-decoration-none">
+    <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
+    <span class="brand-text">MRFSMM</span>
+  </a>
+
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <div class="nav-label">Menu</div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/orders/new' ? 'active-link' : '' %>" href="/orders/new">
+        <i class="fa-solid fa-cart-plus"></i> <span>New Order</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/orders' ? 'active-link' : '' %>" href="/orders">
+        <i class="fa-solid fa-list-check"></i> <span>My Orders</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/add-funds' ? 'active-link' : '' %>" href="/add-funds">
+        <i class="fa-solid fa-wallet"></i> <span>Add Funds</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/services' ? 'active-link' : '' %>" href="/services">
+        <i class="fa-solid fa-cubes"></i> <span>Our Services</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <div class="nav-label">Grow</div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/refer-earn' ? 'active-link' : '' %>" href="/refer-earn">
+        <i class="fa-solid fa-gift"></i> <span>Refer & Earn</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/reviews' ? 'active-link' : '' %>" href="/reviews">
+        <i class="fa-solid fa-star"></i> <span>Client Reviews</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <div class="nav-label">Account</div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item" href="/profile#api-section">
+        <i class="fa-solid fa-plug"></i> <span>Connect API</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/terms' ? 'active-link' : '' %>" href="/terms">
+        <i class="fa-solid fa-file-contract"></i> <span>Terms & Policy</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item <%= currentPath === '/profile' ? 'active-link' : '' %>" href="/profile">
+        <i class="fa-solid fa-user-gear"></i> <span>Account & API</span>
+      </a>
+    </li>
+
+    <% if (user.role === 'admin') { %>
+    <li class="nav-item">
+      <div class="nav-label">Admin</div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link sidebar-nav-item" href="/admin/dashboard">
+        <i class="fa-solid fa-user-shield"></i> <span>Admin Panel</span>
+      </a>
+    </li>
+    <% } %>
+  </ul>
+
+  <div class="sidebar-footer">
+     <div class="d-flex align-items-center gap-2">
+       <div class="admin-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;"><%= user.name.charAt(0).toUpperCase() %></div>
+       <div class="d-flex flex-column text-white lh-sm" style="font-size: 0.85rem;">
+         <span class="fw-bold"><%= user.name %></span>
+         <a href="/logout" class="text-muted" style="font-size: 0.75rem;">Sign out</a>
+       </div>
+     </div>
+  </div>
+</aside>

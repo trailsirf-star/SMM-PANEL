@@ -1,0 +1,150 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">API Providers</h3>
+  <p class="text-muted mb-0">Connect external SMM panels to automatically import and sync services.</p>
+</div>
+
+<!-- Add New Provider -->
+<div class="card shadow-sm border-0 mb-4" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+  <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+    <h6 class="fw-bold mb-0">Add New Provider</h6>
+  </div>
+  <div class="card-body p-4">
+    <form method="POST" action="/admin/api-providers" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Provider Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Peakerr" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">API URL</label>
+        <input type="url" name="apiUrl" class="form-control" placeholder="https://provider.com/api/v2" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">API Key</label>
+        <input type="text" name="apiKey" class="form-control" placeholder="xxxxxxxxxxxx" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100 py-2.5">
+          <i class="fa-solid fa-plus me-1"></i> Add Provider
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Providers Table -->
+<div class="card shadow-sm border-0" style="border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table table-modern align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>API URL</th>
+          <th>Balance</th>
+          <th>Last Synced</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (providers.length === 0) { %>
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="fa-solid fa-plug fa-3x mb-3 opacity-25"></i>
+              <h6 class="fw-bold text-dark">No providers added yet</h6>
+              <div>Add a provider above to start importing services.</div>
+            </td>
+          </tr>
+        <% } %>
+        <% providers.forEach(p => { %>
+          <tr data-provider-id="<%= p._id %>">
+            <td class="fw-semibold text-dark"><%= p.name %></td>
+            <td class="text-muted small" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <i class="fa-solid fa-link me-1"></i> <%= p.apiUrl %>
+            </td>
+            <td class="js-balance fw-medium"><%= p.balance.toFixed(2) %> <%= p.currency %></td>
+            <td class="js-synced text-muted small"><%= p.lastSyncedAt ? new Date(p.lastSyncedAt).toLocaleString() : 'Never' %></td>
+            <td>
+              <span class="badge js-active-badge <%= p.isActive ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' %> px-3 py-2 rounded-pill">
+                <%= p.isActive ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-sm btn-light js-test-btn d-inline-flex align-items-center gap-1.5" style="border: 1px solid #e2e8f0; color: #475569; font-weight: 500;">
+                  <i class="fa-solid fa-plug-circle-check"></i> Test
+                </button>
+                <button class="btn btn-sm btn-light js-toggle-btn d-inline-flex align-items-center gap-1.5" style="border: 1px solid #e2e8f0; color: #475569; font-weight: 500;">
+                  <i class="fa-solid fa-power-off"></i> <%= p.isActive ? 'Disable' : 'Enable' %>
+                </button>
+                <button class="btn btn-sm btn-light js-delete-btn d-inline-flex align-items-center justify-content-center" style="border: 1px solid #fecaca; color: #dc2626; font-weight: 500; width: 32px; height: 32px;">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.js-test-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('tr');
+      const id = row.dataset.providerId;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Testing...';
+
+      try {
+        const res = await fetch(`/admin/api-providers/${id}/test`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+          row.querySelector('.js-balance').textContent = `${data.balance.toFixed(2)} ${data.currency}`;
+          row.querySelector('.js-synced').textContent = new Date().toLocaleString();
+          alert(`Connection successful! Balance: ${data.balance.toFixed(2)} ${data.currency}`);
+        } else {
+          alert('Connection failed: ' + data.error);
+        }
+      } catch (err) {
+        alert('Network error while testing connection.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-plug-circle-check"></i> Test';
+      }
+    });
+  });
+
+  document.querySelectorAll('.js-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('tr');
+      const id = row.dataset.providerId;
+      const res = await fetch(`/admin/api-providers/${id}/toggle`, { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) {
+        const badge = row.querySelector('.js-active-badge');
+        badge.textContent = data.isActive ? 'Active' : 'Inactive';
+        // Update classes to match premium badge styles
+        badge.className = 'badge js-active-badge px-3 py-2 rounded-pill ' + (data.isActive ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary');
+        
+        btn.innerHTML = `<i class="fa-solid fa-power-off"></i> ${data.isActive ? 'Disable' : 'Enable'}`;
+      } else {
+        alert(data.error || 'Failed to update provider.');
+      }
+    });
+  });
+
+  document.querySelectorAll('.js-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this provider? Services linked to it will remain but stop syncing.')) return;
+      const row = btn.closest('tr');
+      const id = row.dataset.providerId;
+      const res = await fetch(`/admin/api-providers/${id}/delete`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) row.remove();
+      else alert(data.error || 'Failed to delete.');
+    });
+  });
+</script>
