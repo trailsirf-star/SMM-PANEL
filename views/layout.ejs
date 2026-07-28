@@ -16,7 +16,11 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/style.css">
-  
+
+  <% if (typeof currentPath !== 'undefined' && currentPath === '/add-funds') { %>
+    <link rel="stylesheet" href="/css/add-funds.css">
+  <% } %>
+
   <%- typeof extraStyles !== 'undefined' ? extraStyles : '' %>
   
   <style>
