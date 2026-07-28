@@ -15,8 +15,6 @@ function safeJson(data) {
 
 async function callProvider(apiUrl, payload) {
   try {
-console.log("URL =", apiUrl);
-console.log("Payload =", payload);
 
 const { data } = await axios.post(
   apiUrl,
