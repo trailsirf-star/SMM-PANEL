@@ -1,0 +1,43 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">Refer & Earn</h3>
+  <p class="text-muted mb-0">Invite friends to MRFSMM using your personal link below.</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-3"><i class="fa-solid fa-link text-primary"></i> Your Referral Link</h6>
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" value="<%= referralLink %>" readonly id="referralLinkInput">
+          <button class="btn btn-outline-secondary" type="button" onclick="copyReferralLink()">Copy</button>
+        </div>
+        <p class="text-muted small mb-0">
+          Share this link with friends. When they sign up and start ordering, get in touch with
+          support so we can apply your referral reward to your account.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold mb-3"><i class="fa-solid fa-circle-info text-primary"></i> How it works</h6>
+        <ol class="mb-0 ps-3" style="line-height: 2;">
+          <li>Share your referral link with friends, family, or your audience.</li>
+          <li>They sign up for MRFSMM using your link.</li>
+          <li>Contact support with your friend's account email so we can confirm and apply your reward.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyReferralLink() {
+    const input = document.getElementById('referralLinkInput');
+    input.select();
+    document.execCommand('copy');
+  }
+</script>
