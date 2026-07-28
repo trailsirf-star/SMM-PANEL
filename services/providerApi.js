@@ -15,10 +15,19 @@ function safeJson(data) {
 
 async function callProvider(apiUrl, payload) {
   try {
-    const { data } = await axios.post(apiUrl, new URLSearchParams(payload), {
-      timeout: DEFAULT_TIMEOUT,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
+console.log("URL =", apiUrl);
+console.log("Payload =", payload);
+
+const { data } = await axios.post(
+  apiUrl,
+  new URLSearchParams(payload),
+  {
+    timeout: 30000,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  }
+);
 
     const parsed = safeJson(data);
     if (process.env.DEBUG_PROVIDER_SERVICES === 'true' && payload?.action === 'services') {
