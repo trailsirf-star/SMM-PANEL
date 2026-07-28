@@ -1,0 +1,729 @@
+<%
+  /* ------------------------------------------------------------------
+     Reusing existing backend values only. No controller/model/route
+     changes. Binance fields are read defensively (optional chaining
+     style fallbacks) since the current Settings schema does not yet
+     define them — nothing breaks if they are undefined, and this page
+     will "light up" automatically the moment those fields are added.
+  ------------------------------------------------------------------ */
+  const binanceId      = settings.binancePayId || settings.binanceId || null;
+  const binanceAddress = settings.binanceWalletAddress || settings.binanceAddress || null;
+  const binanceNetwork = settings.binanceNetwork || null;
+  const hasBinance      = !!(binanceId || binanceAddress);
+%>
+
+<div class="af">
+
+  <div class="af-head">
+    <h1 class="af-title">Add Funds</h1>
+    <p class="af-subtitle">Top up your balance in a few seconds. Choose a method below, send your payment, and upload proof for verification.</p>
+  </div>
+
+  <% if (typeof message !== 'undefined' && message) { %>
+    <div class="af-banner af-banner-success">
+      <i class="fa-solid fa-circle-check"></i>
+      <span><%= message %></span>
+    </div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="af-banner af-banner-error">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span><%= error %></span>
+    </div>
+  <% } %>
+
+  <!-- ===================== PAYMENT METHOD CARDS ===================== -->
+  <div class="af-methods">
+
+    <!-- EasyPaisa -->
+    <div class="af-pay-card">
+      <div class="af-pay-top">
+        <div class="af-brand">
+          <span class="af-logo af-logo-easypaisa">
+            <img src="/images/easypaisa-logo.png" alt="EasyPaisa" onerror="this.style.display='none'; this.parentElement.classList.add('af-logo-fallback-active');">
+            <span class="af-logo-fallback">EP</span>
+          </span>
+          <div>
+            <div class="af-pay-name">EasyPaisa</div>
+            <div class="af-pay-type">Mobile Wallet Transfer</div>
+          </div>
+        </div>
+        <span class="af-verified"><i class="fa-solid fa-circle-check"></i> Official EasyPaisa</span>
+      </div>
+
+      <div class="af-field">
+        <span class="af-field-label">Payment Method</span>
+        <span class="af-field-value"><%= settings.paymentMethodLabel || 'EasyPaisa' %></span>
+      </div>
+      <div class="af-field">
+        <span class="af-field-label">Account Name</span>
+        <span class="af-field-value"><%= settings.easypaisaAccountName || 'Not configured yet' %></span>
+      </div>
+
+      <div class="af-number-box">
+        <span class="af-number-label">Account Number</span>
+        <div class="af-number-row">
+          <span class="af-number"><%= settings.easypaisaNumber || 'Not configured yet' %></span>
+          <button type="button" class="af-copy-btn" data-copy="<%= settings.easypaisaNumber || '' %>" aria-label="Copy EasyPaisa account number">
+            <i class="fa-regular fa-copy"></i>
+            <i class="fa-solid fa-check"></i>
+            <span class="af-copy-label">Copy</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Binance -->
+    <div class="af-pay-card">
+      <div class="af-pay-top">
+        <div class="af-brand">
+          <span class="af-logo af-logo-binance">
+            <img src="/images/binance-logo.png" alt="Binance" onerror="this.style.display='none'; this.parentElement.classList.add('af-logo-fallback-active');">
+            <span class="af-logo-fallback"><i class="fa-solid fa-coins"></i></span>
+          </span>
+          <div>
+            <div class="af-pay-name">Binance</div>
+            <div class="af-pay-type">Crypto Payment</div>
+          </div>
+        </div>
+        <% if (hasBinance) { %>
+          <span class="af-verified"><i class="fa-solid fa-circle-check"></i> Verified Binance</span>
+        <% } %>
+      </div>
+
+      <% if (hasBinance) { %>
+        <% if (binanceId) { %>
+          <div class="af-field">
+            <span class="af-field-label">Binance Pay ID</span>
+            <span class="af-field-value"><%= binanceId %></span>
+          </div>
+        <% } %>
+        <% if (binanceNetwork) { %>
+          <div class="af-field">
+            <span class="af-field-label">Network</span>
+            <span class="af-field-value"><%= binanceNetwork %></span>
+          </div>
+        <% } %>
+        <% if (binanceAddress) { %>
+          <div class="af-number-box">
+            <span class="af-number-label">Wallet Address</span>
+            <div class="af-number-row">
+              <span class="af-number af-number-wrap"><%= binanceAddress %></span>
+              <button type="button" class="af-copy-btn" data-copy="<%= binanceAddress %>" aria-label="Copy Binance wallet address">
+                <i class="fa-regular fa-copy"></i>
+                <i class="fa-solid fa-check"></i>
+                <span class="af-copy-label">Copy</span>
+              </button>
+            </div>
+          </div>
+        <% } else if (binanceId) { %>
+          <div class="af-number-box">
+            <span class="af-number-label">Binance Pay ID</span>
+            <div class="af-number-row">
+              <span class="af-number"><%= binanceId %></span>
+              <button type="button" class="af-copy-btn" data-copy="<%= binanceId %>" aria-label="Copy Binance Pay ID">
+                <i class="fa-regular fa-copy"></i>
+                <i class="fa-solid fa-check"></i>
+                <span class="af-copy-label">Copy</span>
+              </button>
+            </div>
+          </div>
+        <% } %>
+      <% } else { %>
+        <div class="af-empty-state">
+          <i class="fa-regular fa-clock"></i>
+          <span>Binance payments aren't configured yet. Please use EasyPaisa for now, or contact support.</span>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- ===================== HOW TO PAY TIMELINE ===================== -->
+  <div class="af-card">
+    <h2 class="af-card-title">How to Pay</h2>
+    <div class="af-timeline">
+      <div class="af-step">
+        <div class="af-step-icon"><i class="fa-solid fa-hand-pointer"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Choose payment method</div>
+          <div class="af-step-desc">Pick EasyPaisa or Binance above.</div>
+        </div>
+      </div>
+      <div class="af-step">
+        <div class="af-step-icon"><i class="fa-solid fa-paper-plane"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Send payment</div>
+          <div class="af-step-desc">Transfer the amount to the account shown.</div>
+        </div>
+      </div>
+      <div class="af-step">
+        <div class="af-step-icon"><i class="fa-solid fa-camera"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Take a screenshot</div>
+          <div class="af-step-desc">Capture proof of your successful payment.</div>
+        </div>
+      </div>
+      <div class="af-step">
+        <div class="af-step-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Upload screenshot</div>
+          <div class="af-step-desc">Attach it in the form below.</div>
+        </div>
+      </div>
+      <div class="af-step">
+        <div class="af-step-icon"><i class="fa-solid fa-paper-plane-top"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Submit payment</div>
+          <div class="af-step-desc">Send your request for review.</div>
+        </div>
+      </div>
+      <div class="af-step">
+        <div class="af-step-icon"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Admin verification</div>
+          <div class="af-step-desc">Our team manually checks every payment.</div>
+        </div>
+      </div>
+      <div class="af-step af-step-last">
+        <div class="af-step-icon af-step-icon-final"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="af-step-body">
+          <div class="af-step-title">Balance added</div>
+          <div class="af-step-desc">Funds appear in your account instantly after approval.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAYMENT STATUS ===================== -->
+  <div class="af-status-card">
+    <span class="af-status-dot"></span>
+    <div class="af-status-text">
+      <div class="af-status-title">Manual Verification</div>
+      <div class="af-status-sub">Average approval time: <strong>5–15 Minutes</strong></div>
+    </div>
+  </div>
+
+  <!-- ===================== SUBMIT FORM ===================== -->
+  <div class="af-card">
+    <h2 class="af-card-title">Submit Your Payment</h2>
+
+    <form method="POST" action="/add-funds" enctype="multipart/form-data" id="addFundsForm">
+      <div class="af-form-group">
+        <label class="af-label" for="amountInput">Amount</label>
+        <div class="af-amount-wrap">
+          <span class="af-amount-currency"><%= settings.currency %></span>
+          <input
+            type="number"
+            id="amountInput"
+            name="amount"
+            min="<%= settings.minimumDeposit %>"
+            step="0.01"
+            class="af-input af-amount-input"
+            placeholder="0.00"
+            required
+          >
+        </div>
+        <span class="af-hint">Minimum deposit: <%= settings.currency %> <%= settings.minimumDeposit %></span>
+      </div>
+
+      <div class="af-form-group">
+        <label class="af-label">Payment Screenshot</label>
+        <div class="af-dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload payment screenshot">
+          <input type="file" name="screenshot" id="screenshotInput" accept="image/png,image/jpeg,image/webp" required hidden>
+
+          <div class="af-dropzone-empty" id="dropzoneEmpty">
+            <div class="af-dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div class="af-dropzone-text">
+              <strong>Click to upload</strong> or drag and drop
+            </div>
+            <div class="af-dropzone-sub">PNG, JPG, JPEG or WEBP</div>
+          </div>
+
+          <div class="af-dropzone-filled" id="dropzoneFilled" hidden>
+            <img id="dropzonePreview" class="af-dropzone-preview" alt="Screenshot preview">
+            <div class="af-dropzone-fileinfo">
+              <div class="af-dropzone-filename" id="dropzoneFilename"></div>
+              <div class="af-dropzone-filesize" id="dropzoneFilesize"></div>
+              <div class="af-dropzone-actions">
+                <button type="button" class="af-replace-btn" id="replaceBtn">
+                  <i class="fa-solid fa-arrows-rotate"></i> Replace image
+                </button>
+                <button type="button" class="af-remove-btn" id="removeBtn">
+                  <i class="fa-solid fa-trash-can"></i> Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="af-submit-btn" id="submitBtn">
+        <span class="af-submit-label">Submit for Review</span>
+        <span class="af-submit-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- ===================== PAYMENT TIPS ===================== -->
+  <div class="af-tips-card">
+    <div class="af-tips-header">
+      <div class="af-security-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="af-security-title">Payment Tips</div>
+    </div>
+    <ul class="af-tips-list">
+      <li><i class="fa-solid fa-circle-check"></i> Send payment only to the account shown above</li>
+      <li><i class="fa-solid fa-circle-check"></i> Upload the full screenshot</li>
+      <li><i class="fa-solid fa-circle-check"></i> Do not crop the screenshot</li>
+      <li><i class="fa-solid fa-circle-check"></i> Fake payment proofs will be rejected</li>
+      <li><i class="fa-solid fa-circle-check"></i> Balance will be added after approval</li>
+    </ul>
+  </div>
+
+  <!-- ===================== RECENT FUND REQUESTS ===================== -->
+  <div class="af-card">
+    <h2 class="af-card-title">Recent Fund Requests</h2>
+    <div class="af-table-wrap">
+      <table class="af-table">
+        <thead>
+          <tr>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Admin Note</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (recent.length === 0) { %>
+            <tr>
+              <td colspan="4" class="af-table-empty">
+                <div class="af-empty-illustration">
+                  <div class="af-empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+                  <div class="af-empty-title">No payment requests yet.</div>
+                  <div class="af-empty-sub">Your submitted deposits will show up here.</div>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+          <% recent.forEach(tx => { %>
+            <tr>
+              <td><%= settings.currency %> <%= tx.amount.toFixed(2) %></td>
+              <td>
+                <span class="af-status af-status-<%= tx.status %>"><span class="af-status-icon"></span><%= tx.status %></span>
+              </td>
+              <td><%= tx.adminNote || '-' %></td>
+              <td><%= tx.createdAt.toLocaleString() %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  /* Scoped to .af (Add Funds page) — reuses existing design tokens from style.css */
+  .af { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .af-head { text-align: left; }
+  .af-title { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.35rem; letter-spacing: -0.03em; }
+  .af-subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5; max-width: 60ch; }
+
+  .af-banner { display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1.1rem; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; }
+  .af-banner-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .af-banner-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+  /* ---------- Payment method cards ---------- */
+  .af-methods { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+  @media (min-width: 700px) {
+    .af-methods { grid-template-columns: 1fr 1fr; }
+  }
+
+  .af-pay-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    min-width: 0;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .af-pay-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+  .af-pay-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+  .af-brand { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+
+  .af-logo {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; background: var(--brand-primary-light);
+  }
+  .af-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .af-logo-fallback { display: none; font-weight: 800; font-size: 0.85rem; color: var(--brand-primary); }
+  .af-logo-fallback-active img { display: none; }
+  .af-logo-fallback-active .af-logo-fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .af-logo-easypaisa.af-logo-fallback-active { background: #0ea55e1a; }
+  .af-logo-easypaisa .af-logo-fallback { color: #0ea55e; }
+  .af-logo-binance.af-logo-fallback-active { background: #f0b90b1a; }
+  .af-logo-binance .af-logo-fallback { color: #d4a106; font-size: 1.1rem; }
+
+  .af-pay-name { font-weight: 700; font-size: 1.05rem; line-height: 1.2; }
+  .af-pay-type { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem; }
+
+  .af-verified {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700;
+    padding: 0.3rem 0.6rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  }
+
+  .af-field { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; font-size: 0.88rem; }
+  .af-field-label { color: var(--text-secondary); }
+  .af-field-value { font-weight: 600; text-align: right; word-break: break-word; }
+
+  .af-number-box {
+    background: var(--bg-body);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .af-number-label { color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .af-number-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-width: 0; }
+  .af-number {
+    font-size: clamp(1.05rem, 5vw, 1.3rem); font-weight: 800; letter-spacing: 0.02em; color: var(--text-primary);
+    white-space: nowrap; overflow-x: auto; min-width: 0; scrollbar-width: none;
+  }
+  .af-number::-webkit-scrollbar { display: none; }
+  .af-number-wrap { font-size: clamp(0.72rem, 3.2vw, 0.85rem); font-weight: 700; letter-spacing: 0; }
+
+  .af-copy-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--brand-primary); color: #fff; border: none;
+    padding: 0.5rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; flex-shrink: 0; transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .af-copy-btn:hover { background: var(--brand-primary-hover); }
+  .af-copy-btn:active { transform: scale(0.92); }
+  .af-copy-btn .fa-check { display: none; }
+  .af-copy-btn.af-copied { background: #059669; animation: afCopyPop 0.3s ease; }
+  .af-copy-btn.af-copied .fa-copy { display: none; }
+  .af-copy-btn.af-copied .fa-check { display: inline; }
+  @keyframes afCopyPop {
+    0% { transform: scale(0.9); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  .af-empty-state {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: var(--radius-md);
+    padding: 1rem; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;
+  }
+  .af-empty-state i { font-size: 1.1rem; flex-shrink: 0; color: var(--text-muted); }
+
+  /* ---------- Payment status card ---------- */
+  .af-status-card {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+    padding: 0.9rem 1.1rem;
+  }
+  .af-status-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: #22c55e; flex-shrink: 0;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+    animation: afPulse 2s ease-in-out infinite;
+  }
+  @keyframes afPulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15); }
+    50% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0.08); }
+  }
+  .af-status-title { font-weight: 700; font-size: 0.9rem; }
+  .af-status-sub { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.1rem; }
+
+  /* ---------- Generic card ---------- */
+  .af-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+  }
+  .af-card-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 1.25rem; }
+
+  /* ---------- Timeline ---------- */
+  .af-timeline { display: flex; flex-direction: column; }
+  .af-step { display: flex; gap: 1rem; position: relative; padding-bottom: 1.75rem; }
+  .af-step:last-child { padding-bottom: 0; }
+  .af-step::before {
+    content: ''; position: absolute; left: 19px; top: 40px; bottom: 0;
+    width: 2px; background: var(--border-color);
+  }
+  .af-step:last-child::before { display: none; }
+  .af-step-icon {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: var(--brand-primary-light); color: var(--brand-primary);
+    display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+    z-index: 1;
+  }
+  .af-step-icon-final { background: #ecfdf5; color: #059669; }
+  .af-step-body { padding-top: 0.35rem; }
+  .af-step-title { font-weight: 700; font-size: 0.95rem; }
+  .af-step-desc { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.15rem; }
+
+  /* ---------- Form ---------- */
+  .af-form-group { margin-bottom: 1.5rem; }
+  .af-form-group:last-of-type { margin-bottom: 1.75rem; }
+  .af-label { display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.5rem; }
+  .af-hint { display: block; color: var(--text-muted); font-size: 0.78rem; margin-top: 0.4rem; }
+
+  .af-amount-wrap {
+    display: flex; align-items: stretch; border: 1px solid var(--border-color);
+    border-radius: var(--radius-md); overflow: hidden; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .af-amount-wrap:focus-within { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-light); }
+  .af-amount-currency {
+    display: flex; align-items: center; padding: 0 0.9rem; background: var(--bg-body);
+    color: var(--text-secondary); font-weight: 700; font-size: 0.85rem; border-right: 1px solid var(--border-color);
+  }
+  .af-input, .af-amount-input {
+    border: none; outline: none; padding: 0.85rem 1rem; font-size: 1rem; width: 100%; min-width: 0;
+    background: #fff; color: var(--text-primary); font-weight: 600;
+  }
+
+  .af-dropzone {
+    border: 2px dashed var(--border-color); border-radius: var(--radius-lg);
+    background: var(--bg-body); padding: 2rem 1.25rem; text-align: center;
+    cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .af-dropzone:hover, .af-dropzone.af-dragover { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+  .af-dropzone.af-dragover .af-dropzone-icon { transform: scale(1.15); }
+  .af-dropzone-icon { font-size: 1.8rem; color: var(--brand-primary); margin-bottom: 0.75rem; transition: transform 0.2s ease; }
+  .af-dropzone-text { font-size: 0.92rem; color: var(--text-primary); }
+  .af-dropzone-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+  .af-dropzone-filled { display: flex; align-items: center; gap: 1rem; text-align: left; }
+  .af-dropzone-preview {
+    width: 64px; height: 64px; border-radius: var(--radius-md); object-fit: cover;
+    border: 1px solid var(--border-color); flex-shrink: 0; background: #fff;
+    animation: afFadeIn 0.3s ease;
+  }
+  @keyframes afFadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .af-dropzone-fileinfo { min-width: 0; flex: 1; }
+  .af-dropzone-filename { font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .af-dropzone-filesize { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem; }
+  .af-dropzone-actions { display: flex; align-items: center; gap: 0.9rem; margin-top: 0.5rem; flex-wrap: wrap; }
+  .af-replace-btn, .af-remove-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: none; border: none; font-weight: 600;
+    font-size: 0.82rem; cursor: pointer; padding: 0;
+  }
+  .af-replace-btn { color: var(--brand-primary); }
+  .af-replace-btn:hover { text-decoration: underline; }
+  .af-remove-btn { color: #dc2626; }
+  .af-remove-btn:hover { text-decoration: underline; }
+
+  .af-submit-btn {
+    width: 100%; border: none; border-radius: var(--radius-md);
+    padding: 0.95rem 1.5rem; font-size: 0.98rem; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, var(--brand-primary), #818cf8);
+    cursor: pointer; box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.5);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .af-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -6px rgba(79, 70, 229, 0.55); }
+  .af-submit-btn:active { transform: translateY(0); }
+  .af-submit-btn:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
+  .af-submit-spinner { display: none; align-items: center; gap: 0.5rem; }
+  .af-submit-btn.af-loading .af-submit-label { display: none; }
+  .af-submit-btn.af-loading .af-submit-spinner { display: inline-flex; }
+
+  /* ---------- Payment tips card ---------- */
+  .af-tips-card {
+    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+    border: 1px solid #e0e7ff; border-radius: var(--radius-lg); padding: 1.5rem;
+  }
+  .af-tips-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+  .af-security-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    background: #fff; color: var(--brand-primary); display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; box-shadow: var(--shadow-sm);
+  }
+  .af-security-title { font-weight: 700; }
+  .af-tips-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+  .af-tips-list li {
+    display: flex; align-items: flex-start; gap: 0.55rem;
+    color: var(--text-secondary); font-size: 0.86rem; line-height: 1.5;
+  }
+  .af-tips-list li i { color: #059669; margin-top: 0.15rem; flex-shrink: 0; }
+
+  /* ---------- Recent requests table ---------- */
+  .af-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .af-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 480px; }
+  .af-table th {
+    text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.03em; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-color);
+  }
+  .af-table td { padding: 0.85rem 0.75rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+  .af-table tr:last-child td { border-bottom: none; }
+  .af-table tbody tr:hover td { background: var(--bg-body); }
+  .af-table-empty { text-align: center; padding: 0; }
+
+  .af-empty-illustration { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 2.75rem 1rem; }
+  .af-empty-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--bg-body);
+    color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 0.4rem;
+  }
+  .af-empty-title { font-weight: 600; color: var(--text-primary); font-size: 0.92rem; }
+  .af-empty-sub { color: var(--text-muted); font-size: 0.8rem; }
+
+  .af-status {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: capitalize;
+  }
+  .af-status-icon { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .af-status-approved { background: #ecfdf5; color: #059669; }
+  .af-status-rejected { background: #fef2f2; color: #dc2626; }
+  .af-status-pending { background: #fffbeb; color: #b45309; }
+
+  /* ---------- Responsive polish ---------- */
+  @media (max-width: 480px) {
+    .af-title { font-size: 1.4rem; }
+    .af-pay-card, .af-card { padding: 1.15rem; }
+    .af-number { font-size: 1.05rem; }
+  }
+</style>
+
+<script>
+(function () {
+  // ---- Copy buttons ----
+  document.querySelectorAll('.af-copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var value = btn.getAttribute('data-copy');
+      if (!value) return;
+
+      var done = function () {
+        var label = btn.querySelector('.af-copy-label');
+        var original = label ? label.textContent : null;
+        btn.classList.add('af-copied');
+        if (label) label.textContent = 'Copied Successfully';
+        setTimeout(function () {
+          btn.classList.remove('af-copied');
+          if (label && original) label.textContent = original;
+        }, 2000);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done).catch(function () { fallbackCopy(value, done); });
+      } else {
+        fallbackCopy(value, done);
+      }
+    });
+  });
+
+  function fallbackCopy(text, cb) {
+    var el = document.createElement('textarea');
+    el.value = text;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(el);
+    if (cb) cb();
+  }
+
+  // ---- Dropzone / file preview ----
+  var dropzone = document.getElementById('dropzone');
+  var input = document.getElementById('screenshotInput');
+  var empty = document.getElementById('dropzoneEmpty');
+  var filled = document.getElementById('dropzoneFilled');
+  var preview = document.getElementById('dropzonePreview');
+  var filename = document.getElementById('dropzoneFilename');
+  var filesize = document.getElementById('dropzoneFilesize');
+  var replaceBtn = document.getElementById('replaceBtn');
+  var removeBtn = document.getElementById('removeBtn');
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  if (dropzone && input) {
+    dropzone.addEventListener('click', function (e) {
+      if (e.target === replaceBtn || (replaceBtn && replaceBtn.contains(e.target))) return;
+      if (e.target === removeBtn || (removeBtn && removeBtn.contains(e.target))) return;
+      input.click();
+    });
+    dropzone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+    });
+
+    ['dragover', 'dragenter'].forEach(function (evt) {
+      dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.add('af-dragover'); });
+    });
+    ['dragleave', 'dragend'].forEach(function (evt) {
+      dropzone.addEventListener(evt, function () { dropzone.classList.remove('af-dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropzone.classList.remove('af-dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        handleFile();
+      }
+    });
+
+    input.addEventListener('change', handleFile);
+
+    if (replaceBtn) {
+      replaceBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        input.click();
+      });
+    }
+
+    if (removeBtn) {
+      removeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        input.value = '';
+        preview.src = '';
+        filled.hidden = true;
+        empty.hidden = false;
+      });
+    }
+  }
+
+  function handleFile() {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    filename.textContent = file.name;
+    if (filesize) filesize.textContent = formatBytes(file.size);
+    var reader = new FileReader();
+    reader.onload = function (e) { preview.src = e.target.result; };
+    reader.readAsDataURL(file);
+    empty.hidden = true;
+    filled.hidden = false;
+  }
+
+  // ---- Prevent double submit ----
+  var form = document.getElementById('addFundsForm');
+  var submitBtn = document.getElementById('submitBtn');
+  var submitting = false;
+
+  if (form && submitBtn) {
+    form.addEventListener('submit', function (e) {
+      if (submitting) { e.preventDefault(); return; }
+      submitting = true;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('af-loading');
+    });
+  }
+})();
+</script>
