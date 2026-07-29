@@ -1,0 +1,218 @@
+<div class="page-header mb-4">
+  <h3 class="fw-bold mb-1">Admin Dashboard</h3>
+  <p class="text-muted mb-0">Welcome back, here's what's happening with your panel today.</p>
+</div>
+
+<% if (stats.pendingPayments > 0) { %>
+  <div class="alert d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-4" style="background-color: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 12px; padding: 1rem 1.25rem;">
+    <div class="d-flex align-items-center mb-2 mb-md-0">
+      <i class="fa-solid fa-triangle-exclamation me-3 fs-5"></i>
+      <span>You have <strong><%= stats.pendingPayments %></strong> pending fund request(s) awaiting review.</span>
+    </div>
+    <a href="/admin/payments" class="btn btn-sm btn-dark" style="background-color: #92400e; border-color: #92400e;">Review Now</a>
+  </div>
+<% } %>
+
+<!-- Statistics Row 1 -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-indigo-50 text-indigo-600"><i class="fa-solid fa-cart-shopping"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Orders Today</div>
+        <div class="fs-3 fw-bold mb-0"><%= stats.ordersToday %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-calendar-days"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Orders This Month</div>
+        <div class="fs-3 fw-bold mb-0"><%= stats.ordersThisMonth %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-database"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Orders All-Time</div>
+        <div class="fs-3 fw-bold mb-0"><%= stats.ordersAllTime %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-user-plus"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">New Users Today</div>
+        <div class="fs-3 fw-bold mb-0"><%= stats.newUsersToday %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Statistics Row 2 -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-money-bill-wave"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Total Revenue</div>
+        <div class="fs-3 fw-bold mb-0 text-success">Rs. <%= stats.totalRevenue.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-chart-line"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Total Profit</div>
+        <div class="fs-3 fw-bold mb-0 text-success">Rs. <%= stats.totalProfit.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-receipt"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Provider Cost</div>
+        <div class="fs-3 fw-bold mb-0 text-danger">Rs. <%= stats.totalProviderCost.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="stat-icon bg-orange-50 text-orange-600"><i class="fa-solid fa-users"></i></span>
+        </div>
+        <div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.04em; font-size: 0.75rem;">Active Users</div>
+        <div class="fs-3 fw-bold mb-0"><%= stats.activeUsers %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts & Providers -->
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card shadow-sm border-0 h-100" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+      <div class="card-header bg-white border-0 pt-4 pb-2 d-flex align-items-center justify-content-between">
+        <div class="fw-bold fs-6">Orders — Last 7 Days</div>
+        <span class="badge bg-light text-dark border">Weekly</span>
+      </div>
+      <div class="card-body pt-2">
+        <canvas id="ordersChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card shadow-sm border-0 h-100" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+      <div class="card-header bg-white border-0 pt-4 pb-2 fw-bold fs-6">API Providers</div>
+      <div class="list-group list-group-flush px-3 pb-3">
+        <% if (providers.length === 0) { %>
+          <div class="text-center text-muted py-5">
+            <i class="fa-solid fa-plug fa-2x mb-3 opacity-50"></i>
+            <p class="mb-2">No providers configured yet.</p>
+            <a href="/admin/api-providers" class="btn btn-sm btn-outline-primary">Add one</a>
+          </div>
+        <% } %>
+        <% providers.forEach(p => { %>
+          <div class="list-group-item border-0 d-flex justify-content-between align-items-center py-3 px-2" style="border-bottom: 1px solid #f1f5f9 !important;">
+            <div>
+              <div class="fw-semibold text-dark"><%= p.name %></div>
+              <div class="small text-muted mt-1">
+                <i class="fa-solid fa-wallet me-1"></i> <%= p.balance.toFixed(2) %> <%= p.currency %>
+                <% if (p.lastSyncedAt) { %> 
+                  <span class="mx-1">·</span> <i class="fa-solid fa-clock"></i> <%= new Date(p.lastSyncedAt).toLocaleTimeString() %>
+                <% } %>
+              </div>
+            </div>
+            <span class="badge <%= p.isActive ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' %> px-3 py-2 rounded-pill">
+              <%= p.isActive ? 'Active' : 'Inactive' %>
+            </span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  const ctx = document.getElementById('ordersChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: <%- chartLabels %>,
+      datasets: [{
+        label: 'Orders',
+        data: <%- chartData %>,
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+        tension: 0.3,
+        fill: true,
+        pointBackgroundColor: '#4f46e5',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { 
+        y: { 
+          beginAtZero: true, 
+          ticks: { precision: 0, color: '#94a3b8', font: { family: 'Inter' } },
+          grid: { color: '#f1f5f9', drawBorder: false }
+        },
+        x: {
+          ticks: { color: '#94a3b8', font: { family: 'Inter' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+</script>
+
+<style>
+  .stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  }
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+  .bg-indigo-50 { background-color: #eef2ff; } .text-indigo-600 { color: #4f46e5; }
+  .bg-blue-50 { background-color: #eff6ff; } .text-blue-600 { color: #2563eb; }
+  .bg-purple-50 { background-color: #faf5ff; } .text-purple-600 { color: #9333ea; }
+  .bg-green-50 { background-color: #ecfdf5; } .text-green-600 { color: #059669; }
+  .bg-red-50 { background-color: #fef2f2; } .text-red-600 { color: #dc2626; }
+  .bg-orange-50 { background-color: #fff7ed; } .text-orange-600 { color: #ea580c; }
+</style>
